@@ -1,3 +1,5 @@
+import LoginPage from './Components/Login';
+import Register from './Components/Register';
 import 'process/browser'; // or require('process/browser');
 
 import {
@@ -12,6 +14,8 @@ function App() {
     <>
         <Router>
             <Routes>
+                <Route   path="/" element={<LoginPage />} />
+                <Route  path="/Register" element={<Register />} />
             </Routes>
         </Router>
     </>
