@@ -32,6 +32,9 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DrivingService\DrivingService.csproj" />
+    <ProjectReference Include="..\PredictionService\PredictionService.csproj" />
+    <ProjectReference Include="..\UsersService\UsersService.csproj" />
     <ProjectReference Include="..\WebApi\WebApi.csproj">
       <ServiceLaunchUrl>http://localhost:{ServicePort}/swagger</ServiceLaunchUrl>
     </ProjectReference>
