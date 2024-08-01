@@ -1,0 +1,84 @@
+.new-ride-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #eceff1;
+    background-size: cover;
+    background-position: center;
+}
+
+.new-drive-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    width: 500px;
+    width: 100%;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    margin: 0 20px;
+}
+
+.new-drive-container h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: 700;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.drive-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 18px;
+}
+
+.new-ride-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #007bff; /* Promenjena boja za bolji kontrast */
+    align-self: flex-start;
+    margin-left: 5px;
+    font-size: 16px;
+    text-transform: uppercase; /* Velika slova za naglašavanje */
+}
+
+.input-field {
+    margin-bottom: 20px;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    background-color: #007bff;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.button-primary:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.estimation-text {
+    color: #444;
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: 600;
+}
