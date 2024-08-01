@@ -1,0 +1,92 @@
+.edit-profile-container {
+    padding: 10px; /* Smanjeno padding */
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 15px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    width: 760px;
+    margin: 6px auto; /* Smanjena margina */
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+.edit-profile-header {
+    font-size: 25px; /* Veličina fonta naslova */
+    font-weight: bold;
+    margin-bottom: 0px; /* Smanjena margina ispod naslova */
+    color: #333;
+    text-align: center;
+}
+
+.profile-picture {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto; /* Centriranje slike */
+    margin-top: 20px;
+    border-radius: 50%;
+    display: block; /* Osigurava da se slika ponaša kao blok element za margin: auto */
+    object-fit: cover; /* Održava proporcije slike */
+}
+
+
+.profile-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Smanjen razmak između polja */
+}
+
+.profile-info label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 12px; /* Smanjen font */
+}
+
+.profile-info input, .profile-info .info-text {
+    padding: 8px; /* Smanjen padding */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f8f8f8;
+    width: 100%;
+    font-size: 12px; /* Smanjen font */
+}
+
+.edit-profile-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px; /* Smanjena margina na vrhu */
+}
+
+.edit-profile-buttons button {
+    padding: 8px; /* Smanjen padding dugmadi */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px; /* Smanjen font */
+    width: 45%;
+    height: 40px; /* Dodana visina dugmadi */
+}
+
+.edit-button {
+    background-color: #007bff;
+    color: white;
+    margin-top: 1%;
+}
+
+.edit-button:hover {
+    background-color: #0056b3;
+}
+
+.cancel-button {
+    background-color: #6c757d;
+    color: white;
+    margin-top: 1%;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
