@@ -1,0 +1,33 @@
+/* Centering the icon within the table cell */
+.icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Ensures full vertical centering */
+}
+
+/* Custom button styles */
+.custom-button {
+    color: white;
+    border-radius: 8px; /* Rounded corners for a sleek look */
+    padding: 10px 20px; /* Increased padding for better visibility */
+    margin: 0 10px; /* Reduced margin between buttons */
+    font-size: 14px; /* Optimal font size for readability */
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for state changes */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.accept-button {
+    background-color: #28a745; /* Bootstrap green color */
+}
+
+.decline-button {
+    background-color: #dc3545; /* Bootstrap red color */
+}
+
+.custom-button:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Stronger shadow on hover */
+    opacity: 0.9; /* Slight decrease in transparency */
+}
