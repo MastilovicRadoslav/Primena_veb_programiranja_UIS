@@ -1,0 +1,69 @@
+.centered {
+    display: flex;
+    justify-content: center;
+}
+
+.styled-table {
+    width: 80%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.styled-table th,
+.styled-table td {
+    border: none; /* Remove vertical borders */
+    padding: 12px;
+    text-align: center;
+}
+
+.styled-table th {
+    background-color: #007bff;
+    color: yellow;
+    font-weight: bold;
+}
+
+.styled-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Custom button styles for table */
+.green-button,
+.red-button {
+    border-radius: 8px; /* Manje zakrivljene ivice za profesionalniji izgled */
+    padding: 8px 16px; /* Veći padding za bolju vidljivost i klikabilnost */
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    outline: none;
+    border: none; /* Uklanja border za čistiji izgled */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Glatki prelazi za hover efekt */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Lagani shadow za dubinu */
+}
+
+.green-button {
+    background-color: #28a745; /* Koristi bootstrap zelenu boju */
+}
+
+.red-button {
+    background-color: #dc3545; /* Koristi bootstrap crvenu boju */
+}
+
+.green-button:hover,
+.red-button:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* Jači shadow na hover */
+    opacity: 0.9; /* Blago smanjenje transparentnosti */
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f9f9f9; /* Boja za parne redove */
+}
+
+.styled-table tbody tr:nth-of-type(odd) {
+    background-color: #ffffff; /* Boja za neparne redove */
+}
+
+.styled-table tbody tr:hover {
+    background-color: #d1e7fd; /* Nova boja za hover efekat na redovima */
+}
