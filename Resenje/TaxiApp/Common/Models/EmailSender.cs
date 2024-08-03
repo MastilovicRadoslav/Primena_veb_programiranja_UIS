@@ -12,7 +12,7 @@ namespace Common.Models
             {
                 EnableSsl = true,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential("drsprojekat2023@gmail.coms", "Bulevar Despota Stefana 7")
+                Credentials = new NetworkCredential("drsprojekat2023@gmail.com", "Bulevar Despota Stefana 7")
             };
 
             var mailMessage = new MailMessage
