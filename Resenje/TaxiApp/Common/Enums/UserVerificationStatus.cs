@@ -1,6 +1,6 @@
 ﻿namespace Common.Enums
 {
-    public class VerificationStatus
+    public class UserVerificationStatus
     {
         public enum Status { Procesira, Prihvacen, Odbijen }
     }

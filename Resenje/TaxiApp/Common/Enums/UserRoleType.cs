@@ -1,6 +1,6 @@
 ﻿namespace Common.Enums
 {
-    public class UserRoles
+    public class UserRoleType
     {
         public enum Roles { Admin, Rider, Driver }
     }
