@@ -43,7 +43,7 @@ namespace Common.DTOs
         public string Username { get; set; }
 
         [DataMember]
-        public UserRoles.Roles Roles { get; set; }
+        public UserRoleType.Roles Roles { get; set; }
 
         [DataMember]
         public FileUploadRequestDTO ImageFile { get; set; }
@@ -52,13 +52,13 @@ namespace Common.DTOs
         public string Password { get; set; }
 
         [DataMember]
-        public VerificationStatus.Status Status { get; set; }
+        public UserVerificationStatus.Status Status { get; set; }
 
         [DataMember]
         public Guid Id { get; set; }
 
 
-        public UserDetailsDTO(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string username, UserRoles.Roles roles, FileUploadRequestDTO imageFile, string password, VerificationStatus.Status status, Guid id)
+        public UserDetailsDTO(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string username, UserRoleType.Roles roles, FileUploadRequestDTO imageFile, string password, UserVerificationStatus.Status status, Guid id)
         {
             Address = address;
             AverageRating = averageRating;

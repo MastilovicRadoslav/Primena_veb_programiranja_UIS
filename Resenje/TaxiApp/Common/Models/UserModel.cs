@@ -47,14 +47,14 @@ namespace Common.Models
         public string Username { get; set; }
 
         [DataMember]
-        public UserRoles.Roles TypeOfUser { get; set; }
+        public UserRoleType.Roles TypeOfUser { get; set; }
 
 
         [DataMember]
         public FileUploadRequestDTO ImageFile { get; set; }
 
         [DataMember]
-        public VerificationStatus.Status Status { get; set; }
+        public UserVerificationStatus.Status Status { get; set; }
 
         [DataMember]
         public Guid Id { get; set; }
@@ -70,24 +70,24 @@ namespace Common.Models
             Address = userRegister.Address;
             Email = userRegister.Email;
             Password = userRegister.Password;
-            TypeOfUser = Enum.TryParse<UserRoles.Roles>(userRegister.TypeOfUser, true, out var role) ? role : UserRoles.Roles.Rider;
+            TypeOfUser = Enum.TryParse<UserRoleType.Roles>(userRegister.TypeOfUser, true, out var role) ? role : UserRoleType.Roles.Rider;
             Username = userRegister.Username;
             Id = Guid.NewGuid();
             switch (TypeOfUser)
             {
-                case UserRoles.Roles.Admin:
+                case UserRoleType.Roles.Admin:
                     IsVerified = true;
                     break;
-                case UserRoles.Roles.Rider:
+                case UserRoleType.Roles.Rider:
                     IsVerified = true;
                     break;
-                case UserRoles.Roles.Driver:
+                case UserRoleType.Roles.Driver:
                     AverageRating = 0.0;
                     IsVerified = false;
                     NumOfRatings = 0;
                     SumOfRatings = 0;
                     IsBlocked = false;
-                    Status = VerificationStatus.Status.Procesira;
+                    Status = UserVerificationStatus.Status.Procesira;
                     break;
 
             }
@@ -100,7 +100,7 @@ namespace Common.Models
         {
         }
 
-        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoles.Roles typeOfUser, FileUploadRequestDTO imageFile, Guid id)
+        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoleType.Roles typeOfUser, FileUploadRequestDTO imageFile, Guid id)
         {
             Address = address;
             AverageRating = averageRating;
@@ -119,7 +119,7 @@ namespace Common.Models
             Id = id;
         }
 
-        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoles.Roles typeOfUser, FileUploadRequestDTO imageFile, string imageUrl, VerificationStatus.Status s, Guid id) : this(address, averageRating, sumOfRatings, numOfRatings, birthday, email, isVerified, isBlocked, firstName, lastName, password, username, typeOfUser, imageFile, id)
+        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoleType.Roles typeOfUser, FileUploadRequestDTO imageFile, string imageUrl, UserVerificationStatus.Status s, Guid id) : this(address, averageRating, sumOfRatings, numOfRatings, birthday, email, isVerified, isBlocked, firstName, lastName, password, username, typeOfUser, imageFile, id)
         {
             Address = address;
             AverageRating = averageRating;
