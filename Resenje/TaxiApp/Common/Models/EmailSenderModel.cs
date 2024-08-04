@@ -4,7 +4,7 @@ using System.Net.Mail;
 
 namespace Common.Models
 {
-    public class EmailSender : IEmailSender
+    public class EmailSender : IEmailService
     {
         public Task SendEmailAsync(string email, string subject, string message)
         {

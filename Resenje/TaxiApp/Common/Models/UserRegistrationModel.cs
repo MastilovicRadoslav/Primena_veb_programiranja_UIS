@@ -2,12 +2,8 @@
 
 namespace Common.Models
 {
-    public class UserForRegister
+    public class UserRegistrationModel
     {
-        public UserForRegister()
-        {
-        }
-
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Birthday { get; set; }

@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace Common.Models
 {
     [DataContract]
-    public class User
+    public class UserModel
     {
         [DataMember]
         public string Address { get; set; }
@@ -51,7 +51,7 @@ namespace Common.Models
 
 
         [DataMember]
-        public FileUploadDTO ImageFile { get; set; }
+        public FileUploadRequestDTO ImageFile { get; set; }
 
         [DataMember]
         public VerificationStatus.Status Status { get; set; }
@@ -62,7 +62,7 @@ namespace Common.Models
         public string ImageUrl { get; set; }
 
 
-        public User(UserForRegister userRegister)
+        public UserModel(UserRegistrationModel userRegister)
         {
             FirstName = userRegister.FirstName;
             LastName = userRegister.LastName;
@@ -96,11 +96,11 @@ namespace Common.Models
 
 
 
-        public User()
+        public UserModel()
         {
         }
 
-        public User(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoles.Roles typeOfUser, FileUploadDTO imageFile, Guid id)
+        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoles.Roles typeOfUser, FileUploadRequestDTO imageFile, Guid id)
         {
             Address = address;
             AverageRating = averageRating;
@@ -119,7 +119,7 @@ namespace Common.Models
             Id = id;
         }
 
-        public User(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoles.Roles typeOfUser, FileUploadDTO imageFile, string imageUrl, VerificationStatus.Status s, Guid id) : this(address, averageRating, sumOfRatings, numOfRatings, birthday, email, isVerified, isBlocked, firstName, lastName, password, username, typeOfUser, imageFile, id)
+        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoles.Roles typeOfUser, FileUploadRequestDTO imageFile, string imageUrl, VerificationStatus.Status s, Guid id) : this(address, averageRating, sumOfRatings, numOfRatings, birthday, email, isVerified, isBlocked, firstName, lastName, password, username, typeOfUser, imageFile, id)
         {
             Address = address;
             AverageRating = averageRating;
@@ -140,9 +140,9 @@ namespace Common.Models
             Id = id;
         }
 
-        public static FileUploadDTO makeFileOverNetwork(IFormFile file)
+        public static FileUploadRequestDTO makeFileOverNetwork(IFormFile file)
         {
-            FileUploadDTO fileOverNetwork;
+            FileUploadRequestDTO fileOverNetwork;
 
             using (var stream = file.OpenReadStream())
             {
@@ -153,7 +153,7 @@ namespace Common.Models
                     fileContent = memoryStream.ToArray();
                 }
 
-                fileOverNetwork = new FileUploadDTO(file.FileName, file.ContentType, fileContent);
+                fileOverNetwork = new FileUploadRequestDTO(file.FileName, file.ContentType, fileContent);
             }
 
             return fileOverNetwork;
