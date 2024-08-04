@@ -10,9 +10,9 @@ namespace Common.DTOs
         public Guid Id { get; set; }
 
         [DataMember]
-        public UserRoles.Roles Roles { get; set; }
+        public UserRoleType.Roles Roles { get; set; }
 
-        public LogedUserDTO(Guid id, UserRoles.Roles roles)
+        public LogedUserDTO(Guid id, UserRoleType.Roles roles)
         {
             Id = id;
             Roles = roles;
