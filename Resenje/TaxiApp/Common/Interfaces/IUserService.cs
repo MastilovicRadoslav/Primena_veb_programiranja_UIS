@@ -12,9 +12,10 @@ namespace Common.Interfaces
         Task<bool> addNewUser(UserModel user);
         [OperationContract]
         Task<List<UserDetailsDTO>> listUsers();
-
         [OperationContract]
         Task<LogedUserDTO> loginUser(LoginUserDTO loginUserDTO);
+        [OperationContract]
+        Task<List<DriverDetailsDTO>> listDrivers();
 
     }
 }
