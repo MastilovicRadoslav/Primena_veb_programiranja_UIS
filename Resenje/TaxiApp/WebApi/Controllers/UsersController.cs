@@ -1,6 +1,7 @@
 ﻿using Common.DTOs;
 using Common.Interfaces;
 using Common.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.ServiceFabric.Services.Client;
@@ -162,5 +163,50 @@ namespace WebApi.Controllers
             return Regex.IsMatch(email, pattern);
         }
 
+        [Authorize(Policy = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> GetAllDrivers()
+        {
+            try
+            {
+
+                var fabricClient = new FabricClient();
+                List<DriverDetailsDTO> result = null;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+                    var parititonResult = await proxy.listDrivers();
+                    if (parititonResult != null)
+                    {
+                        result = parititonResult;
+                        break;
+                    }
+
+                }
+
+                if (result != null)
+                {
+
+                    var response = new
+                    {
+                        drivers = result,
+                        message = "Succesfuly get list of drivers"
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest("Incorrect email or password");
+                }
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while registering new User");
+            }
+        }
     }
 }
