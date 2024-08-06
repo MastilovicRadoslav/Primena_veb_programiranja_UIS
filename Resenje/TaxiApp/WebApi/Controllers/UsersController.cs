@@ -208,5 +208,78 @@ namespace WebApi.Controllers
                 return StatusCode(500, "An error occurred while registering new User");
             }
         }
+
+        [Authorize(Policy = "Admin")]
+        [HttpPut]
+        public async Task<IActionResult> ChangeDriverStatus([FromBody] DriverStatusUpdateDTO driver)
+        {
+            try
+            {
+
+                var fabricClient = new FabricClient();
+                bool result = false;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+                    bool parititonResult = await proxy.changeDriverStatus(driver.Id, driver.Status);
+                    result = parititonResult;
+                }
+
+                if (result) return Ok("Succesfuly changed driver status");
+
+                else return BadRequest("Driver status is not changed");
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while registering new User");
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPut]
+        public async Task<IActionResult> ChangeUserFields([FromForm] UserUpdateModel user)
+        {
+            UserUpdateNetworkModel userForUpdate = new UserUpdateNetworkModel(user);
+
+            try
+            {
+                var fabricClient = new FabricClient();
+                UserDetailsDTO result = null;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+                    var proxyResult = await proxy.changeUserFields(userForUpdate);
+                    if (proxyResult != null)
+                    {
+                        result = proxyResult;
+                        break;
+                    }
+                }
+
+                if (result != null)
+                {
+                    var response = new
+                    {
+                        changedUser = result,
+                        message = "Succesfuly changed user fields!"
+                    };
+                    return Ok(response);
+                }
+                else return StatusCode(409, "User for change is not in db!");
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while updating user");
+            }
+        }
+
     }
 }
