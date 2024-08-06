@@ -240,37 +240,76 @@ namespace UsersService
             return drivers;
         }
 
-        /// <summary>
-        /// This is the main entry point for your service replica.
-        /// This method executes when this replica of your service becomes primary and has write status.
-        /// </summary>
-        /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service replica.</param>
-        protected override async Task RunAsync(CancellationToken cancellationToken)
+        public async Task<bool> changeDriverStatus(Guid id, bool status)
         {
-            // TODO: Replace the following sample code with your own logic 
-            //       or remove this RunAsync override if it's not needed in your service.
-
-            var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
-
-            while (true)
+            var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
+            using (var tx = this.StateManager.CreateTransaction())
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                using (var tx = this.StateManager.CreateTransaction())
+                ConditionalValue<UserModel> result = await users.TryGetValueAsync(tx, id);
+                if (result.HasValue)
                 {
-                    var result = await myDictionary.TryGetValueAsync(tx, "Counter");
+                    UserModel user = result.Value;
+                    user.IsBlocked = status;
+                    await users.SetAsync(tx, id, user);
 
-                    ServiceEventSource.Current.ServiceMessage(this.Context, "Current Counter Value: {0}",
-                        result.HasValue ? result.Value.ToString() : "Value does not exist.");
+                    await dataRepo.UpdateEntity(id, status);
 
-                    await myDictionary.AddOrUpdateAsync(tx, "Counter", 0, (key, value) => ++value);
-
-                    // If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
-                    // discarded, and nothing is saved to the secondary replicas.
                     await tx.CommitAsync();
-                }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    return true;
+                }
+                else return false;
+
+
+            }
+        }
+
+        public async Task<UserDetailsDTO> changeUserFields(UserUpdateNetworkModel user)
+        {
+            var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                ConditionalValue<UserModel> result = await users.TryGetValueAsync(tx, user.Id);
+                if (result.HasValue)
+                {
+                    UserModel userFromReliable = result.Value;
+
+                    if (!string.IsNullOrEmpty(user.Email)) userFromReliable.Email = user.Email;
+
+                    if (!string.IsNullOrEmpty(user.FirstName)) userFromReliable.FirstName = user.FirstName;
+
+                    if (!string.IsNullOrEmpty(user.LastName)) userFromReliable.LastName = user.LastName;
+
+                    if (!string.IsNullOrEmpty(user.Address)) userFromReliable.Address = user.Address;
+
+                    if (user.Birthday != DateTime.MinValue) userFromReliable.Birthday = user.Birthday;
+
+                    if (!string.IsNullOrEmpty(user.Password)) userFromReliable.Password = user.Password;
+
+                    if (!string.IsNullOrEmpty(user.Username)) userFromReliable.Username = user.Username;
+
+                    if (user.ImageFile != null && user.ImageFile.FileContent != null && user.ImageFile.FileContent.Length > 0) userFromReliable.ImageFile = user.ImageFile;
+
+                    await users.TryRemoveAsync(tx, user.Id); // ukloni ovog proslog 
+
+                    await users.AddAsync(tx, userFromReliable.Id, userFromReliable); // dodaj ga prvo u reliable 
+
+                    if (user.ImageFile != null && user.ImageFile.FileContent != null && user.ImageFile.FileContent.Length > 0) // ako je promenjena slika u reliable upisi je i u blob 
+                    {
+                        CloudBlockBlob blob = await dataRepo.GetBlockBlobReference("users", $"image_{userFromReliable.Id}"); // nadji prethodni blok u blobu
+                        await blob.DeleteIfExistsAsync(); // obrisi ga 
+
+                        CloudBlockBlob newblob = await dataRepo.GetBlockBlobReference("users", $"image_{userFromReliable.Id}"); // kreiraj za ovaj novi username
+                        newblob.Properties.ContentType = userFromReliable.ImageFile.ContentType;
+                        await newblob.UploadFromByteArrayAsync(userFromReliable.ImageFile.FileContent, 0, userFromReliable.ImageFile.FileContent.Length); // upload novu sliku 
+                    }
+
+                    await dataRepo.UpdateUser(user, userFromReliable); // sacuva ga u bazu 
+                    await tx.CommitAsync();
+                    return UserEntityMapper.MapUserToFullUserDto(userFromReliable);
+
+                }
+                else return null;
             }
         }
     }
