@@ -2,7 +2,7 @@
 using Common.Entities;
 using Common.Enums;
 using Common.Models;
-using static Common.Enums.VerificationStatus;
+using static Common.Enums.UserVerificationStatus;
 
 namespace Common.Mappers
 {
@@ -31,7 +31,7 @@ namespace Common.Mappers
                     u.LastName,
                     u.Password,
                     u.Username,
-                    (UserRoles.Roles)Enum.Parse(typeof(UserRoles.Roles), u.PartitionKey),
+                    (UserRoleType.Roles)Enum.Parse(typeof(UserRoleType.Roles), u.PartitionKey),
                     new FileUploadRequestDTO(imageOfUser),
                     u.ImageUrl,
                     myStatus,
