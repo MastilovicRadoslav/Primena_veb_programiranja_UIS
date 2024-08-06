@@ -16,6 +16,10 @@ namespace Common.Interfaces
         Task<LogedUserDTO> loginUser(LoginUserDTO loginUserDTO);
         [OperationContract]
         Task<List<DriverDetailsDTO>> listDrivers();
+        [OperationContract]
+        Task<bool> changeDriverStatus(Guid id, bool status);
+        [OperationContract]
+        Task<UserDetailsDTO> changeUserFields(UserUpdateNetworkModel user);
 
     }
 }
