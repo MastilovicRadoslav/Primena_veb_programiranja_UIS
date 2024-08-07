@@ -281,5 +281,91 @@ namespace WebApi.Controllers
             }
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetUserInfo([FromQuery] Guid id)
+        {
+            try
+            {
+                var fabricClient = new FabricClient();
+                UserDetailsDTO result = null;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+                    var partitionResult = await proxy.GetUserInfo(id);
+                    if (partitionResult != null)
+                    {
+                        result = partitionResult;
+                        break;
+                    }
+                }
+
+                if (result != null)
+                {
+                    var response = new
+                    {
+                        user = result,
+                        message = "Successfully retrieved user info"
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest("This id does not exist");
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving user info");
+            }
+        }
+
+        [Authorize(Policy = "Admin")]
+        [HttpPut]
+        public async Task<IActionResult> VerifyDriver([FromBody] DriverVerificationRequestDTO driver)
+        {
+            try
+            {
+                var fabricClient = new FabricClient();
+                bool result = false;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+                    var partitionResult = await proxy.VerifyDriver(driver.Id, driver.Email, driver.Action);
+                    if (partitionResult != null)
+                    {
+                        result = partitionResult;
+                        break;
+                    }
+                }
+
+                if (result)
+                {
+                    var response = new
+                    {
+                        Verified = result,
+                        message = $"Driver with id:{driver.Id} is now changed status of verification to:{driver.Action}"
+                    };
+                    if (driver.Action == "Prihvacen") await this.emailSender.SendEmailAsync(driver.Email, "Account verification", "Successfuly verified on taxi app now you can drive!");
+
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest("This id does not exist");
+                }
+
+            }
+            catch
+            {
+                return BadRequest("Something went wrong!");
+            }
+        }
     }
 }
