@@ -312,5 +312,47 @@ namespace UsersService
                 else return null;
             }
         }
+
+        public async Task<UserDetailsDTO> GetUserInfo(Guid id)
+        {
+            var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                ConditionalValue<UserModel> result = await users.TryGetValueAsync(tx, id);
+                if (result.HasValue)
+                {
+                    UserDetailsDTO user = UserEntityMapper.MapUserToFullUserDto(result.Value);
+                    return user;
+                }
+                else return new UserDetailsDTO();
+            }
+        }
+        public async Task<bool> VerifyDriver(Guid id, string email, string action)
+        {
+            var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                ConditionalValue<UserModel> result = await users.TryGetValueAsync(tx, id);
+                if (result.HasValue)
+                {
+                    UserModel userForChange = result.Value;
+                    if (action == "Prihvacen")
+                    {
+                        userForChange.IsVerified = true;
+                        userForChange.Status = Status.Prihvacen;
+                    }
+                    else userForChange.Status = Status.Odbijen;
+
+                    await users.SetAsync(tx, id, userForChange);
+
+                    await dataRepo.UpdateDriverStatus(id, action);
+
+                    await tx.CommitAsync();
+                    return true;
+
+                }
+                else return false;
+            }
+        }
     }
 }
