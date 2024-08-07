@@ -1,5 +1,4 @@
-﻿using Common.DTO;
-using Common.DTOs;
+﻿using Common.DTOs;
 using Microsoft.AspNetCore.Http;
 using System.Globalization;
 using System.Runtime.Serialization;
