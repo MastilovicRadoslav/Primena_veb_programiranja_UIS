@@ -98,6 +98,26 @@ namespace UsersService
             }
         }
 
+        public async Task UpdateDriverStatus(Guid id, string status)
+        {
+            TableQuery<UserEntity> usersQuery = new TableQuery<UserEntity>()
+       .Where(TableQuery.GenerateFilterConditionForGuid("Id", QueryComparisons.Equal, id));
+            TableQuerySegment<UserEntity> queryResult = await Users.ExecuteQuerySegmentedAsync(usersQuery, null);
+
+
+            if (queryResult.Results.Count > 0)
+            {
+                UserEntity userFromTable = queryResult.Results[0];
+                userFromTable.Status = status;
+                if (status == "Prihvacen") userFromTable.IsVerified = true;
+                else userFromTable.IsVerified = false;
+                var operation = TableOperation.Replace(userFromTable);
+                await Users.ExecuteAsync(operation);
+
+            }
+
+        }
+
         public async Task<byte[]> DownloadImage(UsersDataRepository dataRepo, UserEntity user, string nameOfContainer)
         {
 
