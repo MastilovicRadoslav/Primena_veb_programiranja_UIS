@@ -1,16 +1,8 @@
-﻿using Common.DTOs;
-using Common.Interfaces;
+﻿using Common.Interfaces;
 using Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
-using System.Fabric;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace WebApi.Controllers
 {
@@ -18,5 +10,26 @@ namespace WebApi.Controllers
     [ApiController]
     public class PredictionController : ControllerBase
     {
+        [Authorize(Policy = "Rider")]
+        [HttpGet]
+        public async Task<IActionResult> GetPredictionPrice([FromQuery] TripModel trip)
+        {
+            PredictionModel prediction = await ServiceProxy.Create<IPredictionService>(new Uri("fabric:/TaxiApp/PredictionService")).GetPredictionPrice(trip.CurrentLocation, trip.Destination);
+            if (prediction != null)
+            {
+
+                var response = new
+                {
+                    price = prediction,
+                    message = "Succesfuly get prediction"
+                };
+                return Ok(response);
+            }
+            else
+            {
+                return StatusCode(500, "An error occurred while predicted price");
+            }
+
+        }
     }
 }
