@@ -1,7 +1,11 @@
+using Common.Entities;
 using Common.Interfaces;
+using Common.Models;
+using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
+using Microsoft.WindowsAzure.Storage.Table;
 using System.Fabric;
 
 namespace DrivingService
@@ -16,6 +20,71 @@ namespace DrivingService
             : base(context)
         {
             dataRepo = new DrivingDataRepository("DrivingTable");
+        }
+
+        public async Task<RoadTripModel> AcceptRoadTrip(RoadTripModel trip)
+        {
+            var roadTrips = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+                    if (!await CheckIfTripAlreadyExists(trip))
+                    {
+                        var enumerable = await roadTrips.CreateEnumerableAsync(tx);
+
+                        using (var enumerator = enumerable.GetAsyncEnumerator())
+                        {
+
+                            await roadTrips.AddAsync(tx, trip.TripId, trip);
+                            RoadTripEntity entity = new RoadTripEntity(trip.RiderId, trip.DriverId, trip.CurrentLocation, trip.Destination, trip.Accepted, trip.Price, trip.TripId, trip.SecondsToDriverArrive);
+                            TableOperation operation = TableOperation.Insert(entity);
+                            await dataRepo.Trips.ExecuteAsync(operation);
+
+                            ConditionalValue<RoadTripModel> result = await roadTrips.TryGetValueAsync(tx, trip.TripId);
+                            await tx.CommitAsync();
+                            return result.Value;
+
+                        }
+
+                    }
+                    else return null;
+
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private async Task<bool> CheckIfTripAlreadyExists(RoadTripModel trip)
+        {
+            var roadTrips = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrips.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if ((enumerator.Current.Value.RiderId == trip.RiderId && enumerator.Current.Value.Accepted == false)) // provera da li je pokusao da posalje novi zahtev za voznju
+                            {                                                                                                    // a da mu ostali svi nisu izvrseni 
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
 
