@@ -1,4 +1,5 @@
-﻿using Common.Interfaces;
+﻿using Common.DTOs;
+using Common.Interfaces;
 using Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -60,6 +61,95 @@ namespace WebApi.Controllers
             catch (Exception)
             {
                 return StatusCode(500, "An error occurred while accepting new drive!");
+            }
+        }
+
+        [Authorize(Policy = "Driver")]
+        [HttpPut]
+        public async Task<IActionResult> AcceptNewRide([FromBody] RideForAcceptDTO ride)
+        {
+            try
+            {
+                var fabricClient = new FabricClient();
+                RoadTripModel result = null;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/DrivingService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IDriveService>(new Uri("fabric:/TaxiApp/DrivingService"), partitionKey);
+                    var partitionResult = await proxy.AcceptRoadTripDriver(ride.RideId, ride.DriverId);
+                    if (partitionResult != null)
+                    {
+                        result = partitionResult;
+                        break;
+                    }
+                }
+
+                if (result != null)
+                {
+                    var response = new
+                    {
+                        ride = result,
+                        message = "Sucessfuly accepted driver!"
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest("This id does not exist");
+                }
+
+            }
+            catch
+            {
+                return BadRequest("Something went wrong!");
+            }
+        }
+
+        [Authorize(Policy = "Driver")]
+        [HttpGet]
+        public async Task<IActionResult> GetAllUncompletedRides()
+        {
+            try
+            {
+
+                var fabricClient = new FabricClient();
+                List<RoadTripModel> result = null;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/DrivingService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IDriveService>(new Uri("fabric:/TaxiApp/DrivingService"), partitionKey);
+                    var parititonResult = await proxy.GetRoadTrips();
+                    if (parititonResult != null)
+                    {
+                        result = parititonResult;
+                        break;
+                    }
+
+                }
+
+                if (result != null)
+                {
+
+                    var response = new
+                    {
+                        rides = result,
+                        message = "Succesfuly get list of not completed rides"
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest("Incorrect email or password");
+                }
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while registering new User");
             }
         }
     }
