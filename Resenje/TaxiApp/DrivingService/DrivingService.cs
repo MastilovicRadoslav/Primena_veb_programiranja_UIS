@@ -133,5 +133,75 @@ namespace DrivingService
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
         }
+
+        public async Task<RoadTripModel> AcceptRoadTripDriver(Guid rideId, Guid driverId)
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            Guid forCompare = new Guid("00000000-0000-0000-0000-000000000000");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+                    ConditionalValue<RoadTripModel> result = await roadTrip.TryGetValueAsync(tx, rideId);
+
+                    if (result.HasValue && result.Value.DriverId == forCompare)
+                    {
+                        // azuriranje polja u reliable 
+                        RoadTripModel tripForAccept = result.Value;
+                        tripForAccept.SecondsToEndTrip = 60; // ovde mozda da se zove servis za predikciju opet 
+                        tripForAccept.DriverId = driverId;
+                        tripForAccept.Accepted = true;
+                        await roadTrip.SetAsync(tx, tripForAccept.TripId, tripForAccept);
+                        if (await dataRepo.UpdateEntity(driverId, rideId))
+                        {
+                            await tx.CommitAsync();
+                            return tripForAccept;
+                        }
+                        else return null;
+                    }
+                    else return null;
+
+                }
+            }
+
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<RoadTripModel>> GetRoadTrips()
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            List<RoadTripModel> notCompletedTrips = new List<RoadTripModel>();
+            Guid forCompare = new Guid("00000000-0000-0000-0000-000000000000");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if (enumerator.Current.Value.DriverId == forCompare)
+                            {
+                                notCompletedTrips.Add(enumerator.Current.Value);
+                            }
+                        }
+                    }
+                    await tx.CommitAsync();
+                }
+
+                return notCompletedTrips;
+            }
+
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
