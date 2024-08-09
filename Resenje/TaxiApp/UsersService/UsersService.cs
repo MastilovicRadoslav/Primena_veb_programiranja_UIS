@@ -149,7 +149,7 @@ namespace UsersService
             var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
             var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
             // ovde ce biti load users 
-            await LoadUsers();
+            await LoadUsers(); //DODATO
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -353,6 +353,28 @@ namespace UsersService
                 }
                 else return false;
             }
+        }
+
+        public async Task<List<DriverDetailsDTO>> GetNotVerifiedDrivers()
+        {
+            var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
+            List<DriverDetailsDTO> drivers = new List<DriverDetailsDTO>();
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                var enumerable = await users.CreateEnumerableAsync(tx);
+                using (var enumerator = enumerable.GetAsyncEnumerator())
+                {
+                    while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                    {
+                        if (enumerator.Current.Value.TypeOfUser == UserRoleType.Roles.Driver && enumerator.Current.Value.Status != Status.Odbijen)
+                        {
+                            drivers.Add(new DriverDetailsDTO(enumerator.Current.Value.Email, enumerator.Current.Value.FirstName, enumerator.Current.Value.LastName, enumerator.Current.Value.Username, enumerator.Current.Value.IsBlocked, enumerator.Current.Value.AverageRating, enumerator.Current.Value.Id, enumerator.Current.Value.Status));
+                        }
+                    }
+                }
+            }
+
+            return drivers;
         }
     }
 }

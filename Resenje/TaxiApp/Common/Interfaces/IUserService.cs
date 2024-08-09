@@ -24,6 +24,8 @@ namespace Common.Interfaces
         Task<UserDetailsDTO> GetUserInfo(Guid id);
         [OperationContract]
         Task<bool> VerifyDriver(Guid id, string email, string action);
+        [OperationContract]
+        Task<List<DriverDetailsDTO>> GetNotVerifiedDrivers();
 
     }
 }
