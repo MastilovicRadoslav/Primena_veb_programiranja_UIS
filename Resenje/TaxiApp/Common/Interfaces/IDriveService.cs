@@ -7,5 +7,9 @@ namespace Common.Interfaces
     {
         [OperationContract]
         Task<RoadTripModel> AcceptRoadTrip(RoadTripModel trip);
+        [OperationContract]
+        Task<RoadTripModel> AcceptRoadTripDriver(Guid rideId, Guid driverId);
+        [OperationContract]
+        Task<List<RoadTripModel>> GetRoadTrips();
     }
 }

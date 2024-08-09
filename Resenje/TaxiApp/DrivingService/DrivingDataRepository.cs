@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAzure.Storage;
+﻿using Common.Entities;
+using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 namespace DrivingService
 {
@@ -28,6 +29,28 @@ namespace DrivingService
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+
+        public async Task<bool> UpdateEntity(Guid driverId, Guid rideId)
+        {
+            TableQuery<RoadTripEntity> rideQuery = new TableQuery<RoadTripEntity>()
+        .Where(TableQuery.GenerateFilterConditionForGuid("TripId", QueryComparisons.Equal, rideId));
+            TableQuerySegment<RoadTripEntity> queryResult = await Trips.ExecuteQuerySegmentedAsync(rideQuery, null);
+
+            if (queryResult.Results.Count > 0)
+            {
+                RoadTripEntity trip = queryResult.Results[0];
+                trip.Accepted = true;
+                trip.SecondsToEndTrip = 60;
+                trip.DriverId = driverId;
+                var operation = TableOperation.Replace(trip);
+                await Trips.ExecuteAsync(operation);
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
