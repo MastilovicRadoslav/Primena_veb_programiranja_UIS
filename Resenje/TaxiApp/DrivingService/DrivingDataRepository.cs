@@ -1,5 +1,4 @@
-﻿using Common.Entities;
-using Microsoft.WindowsAzure.Storage;
+﻿using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 namespace DrivingService
 {
