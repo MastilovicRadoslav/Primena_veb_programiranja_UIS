@@ -203,5 +203,102 @@ namespace DrivingService
                 throw;
             }
         }
+
+        public async Task<List<RoadTripModel>> GetListOfCompletedRidesForDriver(Guid driverId)
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            List<RoadTripModel> driverTrips = new List<RoadTripModel>();
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if (enumerator.Current.Value.DriverId == driverId && enumerator.Current.Value.IsFinished)
+                            {
+                                driverTrips.Add(enumerator.Current.Value);
+                            }
+                        }
+                    }
+                    await tx.CommitAsync();
+                }
+
+                return driverTrips;
+            }
+
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<RoadTripModel>> GetListOfCompletedRidesForRider(Guid driverId)
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            List<RoadTripModel> driverTrips = new List<RoadTripModel>();
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if (enumerator.Current.Value.RiderId == driverId && enumerator.Current.Value.IsFinished)
+                            {
+                                driverTrips.Add(enumerator.Current.Value);
+                            }
+                        }
+                    }
+                    await tx.CommitAsync();
+                }
+
+                return driverTrips;
+            }
+
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<RoadTripModel>> GetListOfCompletedRidesAdmin()
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            List<RoadTripModel> driverTrips = new List<RoadTripModel>();
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+
+                            driverTrips.Add(enumerator.Current.Value);
+                        }
+                    }
+                    await tx.CommitAsync();
+                }
+
+                return driverTrips;
+            }
+
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
