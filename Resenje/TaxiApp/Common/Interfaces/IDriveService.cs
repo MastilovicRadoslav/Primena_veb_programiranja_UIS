@@ -17,5 +17,11 @@ namespace Common.Interfaces
         Task<List<RoadTripModel>> GetListOfCompletedRidesForRider(Guid driverId);
         [OperationContract]
         Task<List<RoadTripModel>> GetListOfCompletedRidesAdmin();
+        [OperationContract]
+        Task<RoadTripModel> GetCurrentTrip(Guid id);
+
+
+        [OperationContract]
+        Task<RoadTripModel> GetCurrentTripDriver(Guid id);
     }
 }
