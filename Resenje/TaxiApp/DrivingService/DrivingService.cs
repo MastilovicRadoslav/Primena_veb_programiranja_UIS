@@ -300,5 +300,63 @@ namespace DrivingService
                 throw;
             }
         }
+
+        public async Task<RoadTripModel> GetCurrentTrip(Guid id) // ovde se salje userId
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if ((enumerator.Current.Value.RiderId == id && enumerator.Current.Value.IsFinished == false))
+                            {
+                                return enumerator.Current.Value;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<RoadTripModel> GetCurrentTripDriver(Guid id)
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if ((enumerator.Current.Value.DriverId == id && enumerator.Current.Value.IsFinished == false))
+                            {
+                                return enumerator.Current.Value;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
