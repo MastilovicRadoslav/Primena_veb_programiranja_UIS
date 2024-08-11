@@ -1,9 +1,13 @@
 using Common.Entities;
 using Common.Interfaces;
+using Common.Mapper;
 using Common.Models;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.ServiceFabric.Data.Collections;
+using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
+using Microsoft.ServiceFabric.Services.Remoting.Client;
+using Microsoft.ServiceFabric.Services.Remoting.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using Microsoft.WindowsAzure.Storage.Table;
 using System.Fabric;
@@ -88,6 +92,35 @@ namespace DrivingService
         }
 
 
+        private async Task LoadRoadTrips()
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+
+            try
+            {
+                using (var transaction = StateManager.CreateTransaction())
+                {
+                    var trips = dataRepo.GetAllTrips();
+                    if (trips.Count() == 0) return;
+                    else
+                    {
+                        foreach (var trip in trips)
+                        {
+                            await roadTrip.AddAsync(transaction, trip.TripId, RoadTripEntityMapper.MapRoadTripEntityToRoadTrip(trip)); // svakako cu se iterirati kroz svaki move next async 
+                        }
+                    }
+
+                    await transaction.CommitAsync();
+
+                }
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         /// <summary>
         /// Optional override to create listeners (e.g., HTTP, Service Remoting, WCF, etc.) for this service replica to handle client or user requests.
         /// </summary>
@@ -96,9 +129,7 @@ namespace DrivingService
         /// </remarks>
         /// <returns>A collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
-        {
-            return new ServiceReplicaListener[0];
-        }
+            => this.CreateServiceRemotingReplicaListeners();
 
         /// <summary>
         /// This is the main entry point for your service replica.
@@ -107,31 +138,86 @@ namespace DrivingService
         /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service replica.</param>
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
-            // TODO: Replace the following sample code with your own logic 
-            //       or remove this RunAsync override if it's not needed in your service.
 
-            var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
-
+            var roadTrips = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            await LoadRoadTrips();
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 using (var tx = this.StateManager.CreateTransaction())
                 {
-                    var result = await myDictionary.TryGetValueAsync(tx, "Counter");
+                    var enumerable = await roadTrips.CreateEnumerableAsync(tx);
+                    if (await roadTrips.GetCountAsync(tx) > 0)
+                    {
+                        using (var enumerator = enumerable.GetAsyncEnumerator())
+                        {
 
-                    ServiceEventSource.Current.ServiceMessage(this.Context, "Current Counter Value: {0}",
-                        result.HasValue ? result.Value.ToString() : "Value does not exist.");
+                            while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                            {
+                                if (!enumerator.Current.Value.Accepted || enumerator.Current.Value.IsFinished)
+                                {
+                                    continue;
+                                }
+                                else if (enumerator.Current.Value.Accepted && enumerator.Current.Value.SecondsToDriverArrive > 0)
+                                {
+                                    enumerator.Current.Value.SecondsToDriverArrive--;
+                                }
+                                else if (enumerator.Current.Value.Accepted && enumerator.Current.Value.SecondsToDriverArrive == 0 && enumerator.Current.Value.SecondsToEndTrip > 0)
+                                {
+                                    enumerator.Current.Value.SecondsToEndTrip--;
+                                }
+                                else if (enumerator.Current.Value.IsFinished == false)
+                                {
+                                    enumerator.Current.Value.IsFinished = true;
+                                    // ovde bi trebalo update baze da se izvrsi 
+                                    await dataRepo.FinishTrip(enumerator.Current.Value.TripId);
 
-                    await myDictionary.AddOrUpdateAsync(tx, "Counter", 0, (key, value) => ++value);
-
-                    // If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
-                    // discarded, and nothing is saved to the secondary replicas.
+                                }
+                                await roadTrips.SetAsync(tx, enumerator.Current.Key, enumerator.Current.Value);
+                            }
+                        }
+                    }
                     await tx.CommitAsync();
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
+        }
+
+        /// <summary>
+        /// Rider id is sent
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public async Task<RoadTripModel> GetCurrentRoadTrip(Guid id)
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if ((enumerator.Current.Value.RiderId == id && enumerator.Current.Value.IsFinished == false))
+                            {
+                                return enumerator.Current.Value;
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
         }
 
         public async Task<RoadTripModel> AcceptRoadTripDriver(Guid rideId, Guid driverId)
@@ -356,6 +442,90 @@ namespace DrivingService
             catch (Exception)
             {
                 throw;
+            }
+        }
+
+        public async Task<List<RoadTripModel>> GetAllNotRatedTrips()
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            List<RoadTripModel> trips = new List<RoadTripModel>();
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+
+                    var enumerable = await roadTrip.CreateEnumerableAsync(tx);
+
+                    using (var enumerator = enumerable.GetAsyncEnumerator())
+                    {
+                        while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                        {
+                            if (!enumerator.Current.Value.IsRated && enumerator.Current.Value.IsFinished)
+                            {
+                                trips.Add(enumerator.Current.Value);
+                            }
+                        }
+                    }
+                }
+                return trips;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> SubmitRating(Guid tripId, int rating)
+        {
+            var roadTrip = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, RoadTripModel>>("Trips");
+            bool result = false;
+            var fabricClient = new FabricClient();
+            try
+            {
+                using (var tx = StateManager.CreateTransaction())
+                {
+                    var trip = await roadTrip.TryGetValueAsync(tx, tripId);
+                    if (!trip.HasValue)
+                    {
+                        return false; // Trip not found
+                    }
+
+
+                    Guid driverId = trip.Value.DriverId;
+                    var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
+
+                    foreach (var partition in partitionList)
+                    {
+                        var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                        var proxy = ServiceProxy.Create<IRatingService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+
+                        try
+                        {
+                            var partitionResult = await proxy.AddRating(driverId, rating);
+                            if (partitionResult)
+                            {
+                                result = true;
+                                trip.Value.IsRated = true;
+                                await roadTrip.SetAsync(tx, trip.Value.TripId, trip.Value);
+                                //update entity in db
+                                await dataRepo.RateTrip(trip.Value.TripId);
+                                break;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            throw;
+                        }
+                    }
+
+                    await tx.CommitAsync();
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Log exception
+                throw new ApplicationException($"Failed to submit rating for TripId: {tripId}", ex);
             }
         }
     }
