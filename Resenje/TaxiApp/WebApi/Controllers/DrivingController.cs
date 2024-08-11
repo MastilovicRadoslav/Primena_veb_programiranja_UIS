@@ -383,5 +383,94 @@ namespace WebApi.Controllers
                 throw;
             }
         }
+
+
+        [Authorize(Policy = "Rider")]
+        [HttpGet]
+        public async Task<IActionResult> GetAllNotRatedTrips()
+        {
+            try
+            {
+
+                var fabricClient = new FabricClient();
+                List<RoadTripModel> result = null;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/DrivingService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IDriveService>(new Uri("fabric:/TaxiApp/DrivingService"), partitionKey);
+                    var parititonResult = await proxy.GetAllNotRatedTrips();
+                    if (parititonResult != null)
+                    {
+                        result = parititonResult;
+                        break;
+                    }
+
+                }
+
+                if (result != null)
+                {
+
+                    var response = new
+                    {
+                        rides = result,
+                        message = "Succesfuly get unrated rides"
+                    };
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+
+        [Authorize(Policy = "Rider")]
+        [HttpPut]
+        public async Task<IActionResult> SubmitRating([FromBody] ReviewModel review)
+        {
+            try
+            {
+
+                var fabricClient = new FabricClient();
+                bool result = false;
+
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/DrivingService"));
+                foreach (var partition in partitionList)
+                {
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
+                    var proxy = ServiceProxy.Create<IDriveService>(new Uri("fabric:/TaxiApp/DrivingService"), partitionKey);
+                    var parititonResult = await proxy.SubmitRating(review.tripId, review.rating);
+                    if (parititonResult != null)
+                    {
+                        result = parititonResult;
+                        break;
+                    }
+
+                }
+
+                if (result != false)
+                {
+                    return Ok("Sucessfuly submited rating");
+                }
+                else
+                {
+                    return BadRequest("Rating is not submited");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+        }
     }
 }
