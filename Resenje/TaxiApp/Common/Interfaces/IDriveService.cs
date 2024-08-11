@@ -8,6 +8,8 @@ namespace Common.Interfaces
         [OperationContract]
         Task<RoadTripModel> AcceptRoadTrip(RoadTripModel trip);
         [OperationContract]
+        Task<RoadTripModel> GetCurrentRoadTrip(Guid id);//
+        [OperationContract]
         Task<RoadTripModel> AcceptRoadTripDriver(Guid rideId, Guid driverId);
         [OperationContract]
         Task<List<RoadTripModel>> GetRoadTrips();
@@ -20,8 +22,12 @@ namespace Common.Interfaces
         [OperationContract]
         Task<RoadTripModel> GetCurrentTrip(Guid id);
 
-
         [OperationContract]
         Task<RoadTripModel> GetCurrentTripDriver(Guid id);
+        [OperationContract]
+        Task<List<RoadTripModel>> GetAllNotRatedTrips();
+
+        [OperationContract]
+        Task<bool> SubmitRating(Guid tripId, int rating);
     }
 }
