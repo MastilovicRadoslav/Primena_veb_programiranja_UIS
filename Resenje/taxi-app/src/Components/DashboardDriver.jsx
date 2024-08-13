@@ -51,6 +51,24 @@ export default function DashboardDriver(props) {
     const apiToGetAllRides = process.env.REACT_APP_GET_ALL_RIDES_ENDPOINT;
     const [clockSimulation, setClockSimulation] = useState('');
     const [showOverlay, setShowOverlay] = useState(false);
+    const [message, setMessage] = useState('You don\'t have an active trip!');
+
+    // Funkcija za ažuriranje poruke
+    const updateMessage = () => {
+        if (rides.length === 0) {
+            setMessage('You don\'t have an active trip!');
+        } else {
+            setMessage('Available rides, please accept one.');
+        }
+    };
+
+    // UseEffect za periodičnu promenu poruke
+    useEffect(() => {
+        updateMessage(); // Pozivamo funkciju odmah kako bismo postavili početnu poruku
+        const intervalId = setInterval(updateMessage, 5000); // Ažuriramo poruku svakih 5 sekundi
+
+        return () => clearInterval(intervalId); // Čišćenje intervala na unmount
+    }, [rides]);
 
     useEffect(() => {
         const fetchUserInfo = async () => {
@@ -142,6 +160,8 @@ export default function DashboardDriver(props) {
             setCurrentRides(data.ride);
             setTripIsActive(true);
             setShowOverlay(true); // Show overlay when the trip is active
+            // Pozivamo fetchRides da ažuriramo tabelu
+            fetchRides();
         } catch (error) {
             console.error('Error accepting drive:', error.message);
         }
@@ -192,6 +212,8 @@ export default function DashboardDriver(props) {
                 if (data.error && data.error.status === 400) {
                     setClockSimulation("You don't have an active trip!");
                     setShowOverlay(false);
+                    setTripIsActive(false);
+                    fetchRides();
                     return;
                 }
 
@@ -204,14 +226,19 @@ export default function DashboardDriver(props) {
                         setClockSimulation("Your trip has ended");
                         setShowOverlay(false); // Hide overlay when trip ends
                         setTripIsActive(false);
+                        fetchRides(); // Ažuriranje tabele vožnji
                     }
                 } else {
                     setClockSimulation("You don't have an active trip!");
                     setShowOverlay(false);
+                    setTripIsActive(false);
+                    fetchRides();
                 }
             } catch (error) {
                 setClockSimulation("An error occurred while fetching the trip data.");
                 setShowOverlay(false);
+                setTripIsActive(false);
+                fetchRides();
             }
         };
 
@@ -221,11 +248,24 @@ export default function DashboardDriver(props) {
         return () => clearInterval(intervalId);
     }, [jwt, apiEndpointForCurrentRide, userId]);
 
+    // Proveravamo da li treba prikazati overlay
+    const isOverlayVisible = clockSimulation?.startsWith('You will arrive in') ||
+        clockSimulation?.startsWith('The trip will end in') ||
+        clockSimulation?.startsWith('Your trip has ended');
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+            {showOverlay && (
+                <div className="overlay">
+                    <p className="trip-status">{clockSimulation}</p>
+                </div>
+            )}
             <div className="navbar">
                 <div className="nav-left">
                     <span className="username-text">{username}:</span>
+                    {message && !isOverlayVisible && (
+                        <p className="status-message">{message}</p>
+                    )}
                 </div>
                 <div className="nav-center">
                     {!tripIsActive && (
@@ -244,144 +284,135 @@ export default function DashboardDriver(props) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'row', flex: 1, justifyContent: 'center', backgroundImage: 'url("/public/Images/Pozadina.jpg")' }}>
                 <div className="edit-profile-container">
-                    {tripIsActive && showOverlay && (
-                        <div className="overlay">
-                            <p className="trip-status" style={{ color: 'red', fontSize: '48px', textAlign: 'center', marginTop: '20px' }}>{clockSimulation}</p>
-                        </div>
-                    )}
-                    {!tripIsActive && (
-                        <>
-                            {view === "editProfile" && (
+                    {view === "editProfile" && (
+                        <div>
+                            <div className="edit-profile-header">Edit profile</div>
+                            <img src={imageFile} alt="User" className="profile-picture" />
+                            {isEditing && <input type="file" onChange={handleImageChange} />}
+                            <div className="profile-info">
                                 <div>
-                                    <div className="edit-profile-header">Edit profile</div>
-                                    <img src={imageFile} alt="User" className="profile-picture" />
-                                    {isEditing && <input type="file" onChange={handleImageChange} />}
-                                    <div className="profile-info">
-                                        <div>
-                                            <label>Username</label>
-                                            {isEditing ? (
-                                                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text">{username}</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>First name</label>
-                                            {isEditing ? (
-                                                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text">{firstName}</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>Last name</label>
-                                            {isEditing ? (
-                                                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text">{lastName}</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>Address</label>
-                                            {isEditing ? (
-                                                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text">{address}</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>Birthday</label>
-                                            {isEditing ? (
-                                                <input type="text" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text">{birthday}</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>Email</label>
-                                            {isEditing ? (
-                                                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text">{email}</div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>Old password</label>
-                                            {isEditing ? (
-                                                <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text"><input type="password" placeholder="********" disabled /></div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>New password</label>
-                                            {isEditing ? (
-                                                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text"><input type="password" placeholder="********" disabled /></div>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label>Repeat new password</label>
-                                            {isEditing ? (
-                                                <input type="password" value={repeatNewPassword} onChange={(e) => setRepeatNewPassword(e.target.value)} />
-                                            ) : (
-                                                <div className="info-text"><input type="password" placeholder="********" disabled /></div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <label>Username</label>
                                     {isEditing ? (
-                                        <div className="edit-profile-buttons">
-                                            <button className="edit-button" onClick={handleSaveClick}>Save</button>
-                                            <button className="cancel-button" onClick={handleCancelClick}>Cancel</button>
-                                        </div>
+                                        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
                                     ) : (
-                                        <button className="edit-button" onClick={handleEditClick}>Edit</button>
+                                        <div className="info-text">{username}</div>
                                     )}
                                 </div>
-                            )}
-                            {view === 'rides' && (
-                                <div className="centered" style={{ width: '100%', height: '10%' }}>
-                                    <table className="styled-table" style={{ width: '70%' }}>
-                                        <thead>
-                                            <tr>
-                                                <th>Location</th>
-                                                <th>Destination</th>
-                                                <th>Price</th>
-                                                <th>Confirmation</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {rides.map((val) => (
-                                                <tr key={val.tripId}>
-                                                    <td>{val.currentLocation}</td>
-                                                    <td>{val.destination}</td>
-                                                    <td>{val.price}</td>
-                                                    <td>
-                                                        <button
-                                                            style={{
-                                                                borderRadius: '20px',
-                                                                padding: '5px 10px',
-                                                                color: 'white',
-                                                                fontWeight: 'bold',
-                                                                cursor: 'pointer',
-                                                                outline: 'none',
-                                                                background: 'green'
-                                                            }}
-                                                            onClick={() => handleAcceptNewDrive(val.tripId)}
-                                                        >
-                                                            Accept
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                <div>
+                                    <label>First name</label>
+                                    {isEditing ? (
+                                        <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text">{firstName}</div>
+                                    )}
                                 </div>
+                                <div>
+                                    <label>Last name</label>
+                                    {isEditing ? (
+                                        <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text">{lastName}</div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label>Address</label>
+                                    {isEditing ? (
+                                        <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text">{address}</div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label>Birthday</label>
+                                    {isEditing ? (
+                                        <input type="text" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text">{birthday}</div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label>Email</label>
+                                    {isEditing ? (
+                                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text">{email}</div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label>Old password</label>
+                                    {isEditing ? (
+                                        <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text"><input type="password" placeholder="********" disabled /></div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label>New password</label>
+                                    {isEditing ? (
+                                        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text"><input type="password" placeholder="********" disabled /></div>
+                                    )}
+                                </div>
+                                <div>
+                                    <label>Repeat new password</label>
+                                    {isEditing ? (
+                                        <input type="password" value={repeatNewPassword} onChange={(e) => setRepeatNewPassword(e.target.value)} />
+                                    ) : (
+                                        <div className="info-text"><input type="password" placeholder="********" disabled /></div>
+                                    )}
+                                </div>
+                            </div>
+                            {isEditing ? (
+                                <div className="edit-profile-buttons">
+                                    <button className="edit-button" onClick={handleSaveClick}>Save</button>
+                                    <button className="cancel-button" onClick={handleCancelClick}>Cancel</button>
+                                </div>
+                            ) : (
+                                <button className="edit-button" onClick={handleEditClick}>Edit</button>
                             )}
-                            {view === 'driveHistory' && <RidesDriver />}
-                        </>
+                        </div>
                     )}
+                    {view === 'rides' && (
+                        <div className="centered" style={{ width: '100%', height: '10%' }}>
+                            <table className="styled-table" style={{ width: '70%' }}>
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th>Destination</th>
+                                        <th>Price</th>
+                                        <th>Confirmation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rides.map((val) => (
+                                        <tr key={val.tripId}>
+                                            <td>{val.currentLocation}</td>
+                                            <td>{val.destination}</td>
+                                            <td>{val.price}</td>
+                                            <td>
+                                                <button
+                                                    style={{
+                                                        borderRadius: '20px',
+                                                        padding: '5px 10px',
+                                                        color: 'white',
+                                                        fontWeight: 'bold',
+                                                        cursor: 'pointer',
+                                                        outline: 'none',
+                                                        background: 'green'
+                                                    }}
+                                                    onClick={() => handleAcceptNewDrive(val.tripId)}
+                                                >
+                                                    Accept
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {view === 'driveHistory' && <RidesDriver />}
                 </div>
             </div>
         </div>

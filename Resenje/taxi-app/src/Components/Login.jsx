@@ -1,5 +1,5 @@
 import React from 'react';
-import '../Styles/LoginStyles.css';
+import '../Styles/LoginPage.css';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LoginApiCall } from '../Services/LoginServices';

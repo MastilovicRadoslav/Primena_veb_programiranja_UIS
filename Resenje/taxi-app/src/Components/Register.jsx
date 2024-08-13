@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GoogleLogin } from 'react-google-login';
-import '../Styles/RegisterStyles.css';
+import '../Styles/RegisterPage.css';
 import { gapi } from 'gapi-script';
 import { Link } from 'react-router-dom';
 import { RegularRegisterApiCall } from '../Services/RegisterServices.js';

@@ -16,6 +16,7 @@
     margin-bottom: 0px; /* Smanjena margina ispod naslova */
     color: #333;
     text-align: center;
+    margin-top: -10px;
 }
 
 .profile-picture {

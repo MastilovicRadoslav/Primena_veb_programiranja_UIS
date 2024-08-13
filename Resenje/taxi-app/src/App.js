@@ -1,3 +1,4 @@
+import Dashboard from './Components/Dashboard';
 import LoginPage from './Components/Login';
 import Register from './Components/Register';
 import 'process/browser'; // or require('process/browser');
@@ -16,6 +17,7 @@ function App() {
             <Routes>
                 <Route   path="/" element={<LoginPage />} />
                 <Route  path="/Register" element={<Register />} />
+                <Route  exact path='/Dashboard' element={<Dashboard/>} ></Route>
             </Routes>
         </Router>
     </>
