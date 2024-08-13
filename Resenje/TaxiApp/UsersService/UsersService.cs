@@ -19,7 +19,7 @@ namespace UsersService
     /// <summary>
     /// An instance of this class is created for each service replica by the Service Fabric runtime.
     /// </summary>
-    internal sealed class UsersService : StatefulService, IUserService
+    internal sealed class UsersService : StatefulService, IUserService, IRatingService
     {
         public UsersDataRepository dataRepo;
 
@@ -375,6 +375,43 @@ namespace UsersService
             }
 
             return drivers;
+        }
+
+        public async Task<bool> AddRating(Guid driverId, int rating)
+        {
+            var users = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, UserModel>>("UserEntities");
+            bool operation = false;
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                var enumerable = await users.CreateEnumerableAsync(tx);
+                using (var enumerator = enumerable.GetAsyncEnumerator())
+                {
+                    while (await enumerator.MoveNextAsync(default(CancellationToken)))
+                    {
+                        if (enumerator.Current.Value.Id == driverId)
+                        {
+                            var user = enumerator.Current.Value;
+                            user.NumOfRatings++;
+                            user.SumOfRatings += rating;
+                            user.AverageRating = (double)user.SumOfRatings / (double)user.NumOfRatings;
+
+
+                            await users.SetAsync(tx, driverId, user); // update user in reliable 
+
+                            await dataRepo.UpdateDriverRating(user.Id, user.SumOfRatings, user.NumOfRatings, user.AverageRating);  // update user in db
+
+                            await tx.CommitAsync();
+
+                            operation = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return operation;
+
+
         }
     }
 }
