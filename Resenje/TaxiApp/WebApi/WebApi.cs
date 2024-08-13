@@ -37,7 +37,7 @@ namespace WebApi
                         //jwt
                         var jwtIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>();
                         var jwtKey = builder.Configuration.GetSection("Jwt:Key").Get<string>();
-                        builder.Services.AddTransient<IEmailService,EmailSenderModel>();
+                        builder.Services.AddTransient<IEmailService, EmailSenderModel>();
                         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                          .AddJwtBearer(options =>
                          {

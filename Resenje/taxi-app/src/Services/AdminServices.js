@@ -54,7 +54,7 @@ export async function ChangeDriverStatus(apiEndpoint, id, changeStatus, jwt) {
     }
 }
 
-export async function VerifyDriver(apiEndpoint, id, status,email, jwt) {
+export async function VerifyDriver(apiEndpoint, id, status, email, jwt) {
     try {
         const response = await axios.put(apiEndpoint, {
             Id: id,

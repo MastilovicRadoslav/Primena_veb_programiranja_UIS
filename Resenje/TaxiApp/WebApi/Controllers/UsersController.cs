@@ -352,7 +352,7 @@ namespace WebApi.Controllers
                         Verified = result,
                         message = $"Driver with id:{driver.Id} is now changed status of verification to:{driver.Action}"
                     };
-                    if (driver.Action == "Prihvacen") await this.emailSender.SendEmailAsync(driver.Email, "Account verification", "Successfuly verified on taxi app now you can drive!");
+                    if (driver.Action == "Prihvacen") await this.emailSender.SendEmailAsync(driver.Email, "Verifikacija vozača", "Uspešna verifikacija, možete nastaviti sa korišćenjem aplikacije.");
 
                     return Ok(response);
                 }
