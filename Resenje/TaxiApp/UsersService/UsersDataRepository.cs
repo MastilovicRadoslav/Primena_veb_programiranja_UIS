@@ -115,6 +115,24 @@ namespace UsersService
                 await Users.ExecuteAsync(operation);
 
             }
+        }
+        public async Task UpdateDriverRating(Guid id, int sumOfRating, int numOfRating, double averageRating)
+        {
+            TableQuery<UserEntity> usersQuery = new TableQuery<UserEntity>()
+       .Where(TableQuery.GenerateFilterConditionForGuid("Id", QueryComparisons.Equal, id));
+            TableQuerySegment<UserEntity> queryResult = await Users.ExecuteQuerySegmentedAsync(usersQuery, null);
+
+
+            if (queryResult.Results.Count > 0)
+            {
+                UserEntity userFromTable = queryResult.Results[0];
+                userFromTable.SumOfRatings = sumOfRating;
+                userFromTable.NumOfRatings = numOfRating;
+                userFromTable.AverageRating = averageRating;
+                var operation = TableOperation.Replace(userFromTable);
+                await Users.ExecuteAsync(operation);
+
+            }
 
         }
 
