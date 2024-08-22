@@ -4,13 +4,13 @@ import { getAllUnRatedTrips } from '../Services/RiderServices';
 import { FaStar } from 'react-icons/fa';
 import { SubmitRating } from '../Services/RiderServices';
 export default function Rate() {
-    const [rides, setRides] = useState([]);
-    const [selectedTripId, setSelectedTripId] = useState(null);
-    const [selectedRating, setSelectedRating] = useState(0);
+    const [rides, setRides] = useState([]); //cuva listu voznji koje jos nisu ocenjene
+    const [selectedTripId, setSelectedTripId] = useState(null); //cua ID trenutno odabrane voznje za ocenjivanje
+    const [selectedRating, setSelectedRating] = useState(0); //cuva trenutnu ocenu koju je korisnik odabrao za voznju
     const token = localStorage.getItem('token');
     const apiEndpoint = process.env.REACT_APP_GET_ALL_UNRATED_TRIPS;
     const ratintEndpoint = process.env.REACT_APP_SUMBIT_RATING;
-    // Function to fetch all unrated trips
+    // Funkcija za preuzimanje svih neocenjenih voznji
     const fetchDrivers = async () => {
         try {
             const data = await getAllUnRatedTrips(token, apiEndpoint);
@@ -22,27 +22,26 @@ export default function Rate() {
     };
 
     useEffect(() => {
-        fetchDrivers();
+        fetchDrivers(); //odmah prikazivanje neocenjenih voznji
     }, []);
 
-    // Function to handle rating selection
+    // Funkcija za rukovanje izborom ocene, kada korisnik klikne na zvezdicu ocene postavlja se Id voznje i ocena voznje
     const handleRating = (tripId, rating) => {
         setSelectedTripId(tripId);
         setSelectedRating(rating);
     };
 
-    // Function to submit rating to the backend
+    // Funkcija za slanje ocene bekendu
     const submitRatingToBackend = async () => {
         if (selectedTripId && selectedRating) {
             try {
                 console.log("Usao");
                 console.log(selectedTripId);
                 console.log(selectedRating);
-                //await submitRating(token, selectedTripId, selectedRating);
                 const data = await SubmitRating(ratintEndpoint,token,selectedRating,selectedTripId);
                 console.log(data);
                 console.log("Rating submitted successfully");
-                fetchDrivers(); // Refresh the list after submitting
+                fetchDrivers(); // Osvezavanje liste nakon slanja ocene
             } catch (error) {
                 console.error('Error submitting rating:', error);
             }

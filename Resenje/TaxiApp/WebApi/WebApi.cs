@@ -35,18 +35,20 @@ namespace WebApi
                         var builder = WebApplication.CreateBuilder();
 
                         //jwt
-                        var jwtIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>();
-                        var jwtKey = builder.Configuration.GetSection("Jwt:Key").Get<string>();
-                        builder.Services.AddTransient<IEmailService, EmailSenderModel>();
-                        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                         .AddJwtBearer(options =>
+                        var jwtIssuer = builder.Configuration.GetSection("Jwt:Issuer").Get<string>(); //izdavac tokena
+                        var jwtKey = builder.Configuration.GetSection("Jwt:Key").Get<string>(); //tajni kljuc za potpisivanje tokena
+                        //Registracija IEmailService kao tranzijenti (nova instanca EmailSenderModel se kreira svaki put kad se zatrazi ovaj servis)
+                        builder.Services.AddTransient<IEmailService,EmailSenderModel>();
+                        //konfiguraicja JWT autentifikacije
+                        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) //šema
+                         .AddJwtBearer(options => //konfiguracija param. za validaciju tokena
                          {
-                             options.TokenValidationParameters = new TokenValidationParameters
+                             options.TokenValidationParameters = new TokenValidationParameters //validacija tokena
                              {
-                                 ValidateIssuer = true,
-                                 ValidateAudience = true,
-                                 ValidateLifetime = true,
-                                 ValidateIssuerSigningKey = true,
+                                 ValidateIssuer = true, //izdavac
+                                 ValidateAudience = true, //publika
+                                 ValidateLifetime = true, //da li je istekao
+                                 ValidateIssuerSigningKey = true, //potpis
                                  ValidIssuer = jwtIssuer,
                                  ValidAudience = jwtIssuer,
                                  IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
@@ -55,16 +57,17 @@ namespace WebApi
                         //jwt
 
 
-                        builder.Services.AddSingleton<StatelessServiceContext>(serviceContext);
+                        builder.Services.AddSingleton<StatelessServiceContext>(serviceContext); //singelton servis ista instanca
                         builder.WebHost
                                     .UseKestrel()
                                     .UseContentRoot(Directory.GetCurrentDirectory())
                                     .UseServiceFabricIntegration(listener, ServiceFabricIntegrationOptions.None)
                                     .UseUrls(url);
-                        builder.Services.AddControllers();
+                        builder.Services.AddControllers(); //registracija kontrolera
                         builder.Services.AddEndpointsApiExplorer();
                         builder.Services.AddSwaggerGen();
-                        builder.Services.AddSignalR();
+                        builder.Services.AddSignalR(); //registracija SingalR biblioteke
+                        //politika autorizacije za razlicite uloge korisnika
                         builder.Services.AddAuthorization(options =>
                         {
                                options.AddPolicy("Admin", policy => policy.RequireClaim("MyCustomClaim", "Admin"));
@@ -75,10 +78,10 @@ namespace WebApi
                           builder.Services.AddCors(options =>
                         {
                             options.AddPolicy(name: "cors", builder => {
-                                builder.WithOrigins("http://localhost:3000")
-                                        .AllowAnyHeader()
-                                        .AllowAnyMethod()
-                                        .AllowCredentials();
+                                builder.WithOrigins("http://localhost:3000") //dozvola zahtevima samo sa ovog URL
+                                        .AllowAnyHeader() //bilo koji http
+                                        .AllowAnyMethod() //bilo koja http metoda
+                                        .AllowCredentials(); //slanje kredencijala
 
                                 });
                             });
@@ -96,10 +99,10 @@ namespace WebApi
                         app.UseHttpsRedirection();
 
 
-                        app.UseAuthentication();
-                        app.UseAuthorization();
+                        app.UseAuthentication(); //aktivacija autentifikacije
+                        app.UseAuthorization(); //aktivacija autorizacije
 
-                        app.MapControllers();
+                        app.MapControllers(); //mapiranje ruta na kontrolere
                         app.UseStaticFiles();
                         app.UseFileServer();
                         app.UseDefaultFiles();

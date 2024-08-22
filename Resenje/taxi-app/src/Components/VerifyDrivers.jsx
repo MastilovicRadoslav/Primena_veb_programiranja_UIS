@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import '../Styles/DriversViewPage.css'; // Import your CSS file for other styles
+import '../Styles/DriversViewPage.css';
 import { GetDriversForVerify, VerifyDriver } from '../Services/AdminServices.js';
 import { FaCheckCircle } from 'react-icons/fa';
 import '../Styles/VerificationPage.css';
 
 export default function VerifyDrivers() {
-    const [drivers, setDrivers] = useState([]);
-    const token = localStorage.getItem('token');
+    const [drivers, setDrivers] = useState([]); //cuvanje liste vozaca koji cekaju na verifikaciju
+    const token = localStorage.getItem('token'); //token
     const getAllDriversEndpoint = process.env.REACT_APP_GET_GET_NOT_VERIFIED_AND_VERIFIED_DRIVER;
     const verifyDriversEndpoint = process.env.REACT_APP_VERIFY_DRIVER;
 
-    // Function to fetch all drivers
+    // Dohvatanje svih vozaca
     const fetchDrivers = async () => {
         try {
-            const data = await GetDriversForVerify(getAllDriversEndpoint, token);
-            console.log("Drivers for verify:", data);
-            setDrivers(data.drivers);
+            const data = await GetDriversForVerify(getAllDriversEndpoint, token); //preuzimanje liste vozaca koji cekaju na verifikaciju
+            console.log("Drivers for verify:", data); //ispis
+            setDrivers(data.drivers); //setujem niz vozaca
         } catch (error) {
             console.error('Error fetching drivers:', error);
         }
@@ -24,8 +24,8 @@ export default function VerifyDrivers() {
     const handleAccept = async (val) => {
         const { id, email } = val;
         try {
-            const data = await VerifyDriver(verifyDriversEndpoint, id, "Prihvacen", email, token);
-            console.log("Drivers for verify:", data);
+            const data = await VerifyDriver(verifyDriversEndpoint, id, "Prihvacen", email, token); //oznacujem vozaca kao "Prihvacen" verifikovan
+            console.log("Drivers for verify:", data);//ispis
             //setDrivers(data.drivers);
         } catch (error) {
             console.error('Error fetching drivers:', error);
@@ -36,14 +36,14 @@ export default function VerifyDrivers() {
         console.log(id);
         console.log(email);
         try {
-            const data = await VerifyDriver(verifyDriversEndpoint, id, "Odbijen", email, token);
+            const data = await VerifyDriver(verifyDriversEndpoint, id, "Odbijen", email, token); //odbijanje korisnika "Odbijen"
             console.log("Drivers for verify:", data);
         } catch (error) {
             console.error('Error fetching drivers:', error);
         }
     };
 
-    useEffect(() => {
+    useEffect(() => { //svaki put kad se niz [drivers] promeni useEffect se pokrene, automatski osvezujem listu vozaca nakon sto se neki vozac prihvati ili odbije
         fetchDrivers();
     }, [drivers]);
 
@@ -73,7 +73,7 @@ export default function VerifyDrivers() {
                                     <>
                                         <button
                                             className="custom-button accept-button"
-                                            onClick={() => handleAccept(val)} // Pass val to handleAccept
+                                            onClick={() => handleAccept(val)} 
                                         >
                                             Accept
                                         </button>

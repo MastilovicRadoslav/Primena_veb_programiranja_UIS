@@ -3,7 +3,7 @@
 namespace Common.DTOs
 {
     [DataContract]
-    public class DriverDetailsDTO
+    public class DriverDetailsDTOs //za preuzimanje vozaca i slanje na front
     {
         [DataMember]
         public string Email { get; set; }
@@ -28,7 +28,7 @@ namespace Common.DTOs
         [DataMember]
         public Common.Enums.UserVerificationStatus.Status Status { get; set; }
 
-        public DriverDetailsDTO(string email, string name, string lastName, string username, bool isBlocked, double averageRating, Guid id, Common.Enums.UserVerificationStatus.Status status)
+        public DriverDetailsDTOs(string email, string name, string lastName, string username, bool isBlocked, double averageRating, Guid id, Common.Enums.UserVerificationStatus.Status status)
         {
             Email = email;
             Name = name;

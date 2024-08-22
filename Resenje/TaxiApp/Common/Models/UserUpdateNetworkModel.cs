@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace Common.Models
 {
     [DataContract]
-    public class UserUpdateNetworkModel
+    public class UserUpdateNetworkModel //slicno UserModel kad sam pravio za registraciju, sluzi kao transportni model koji prenosi podatke preko mreze do servisa
     {
 
         [DataMember]
@@ -29,7 +29,7 @@ namespace Common.Models
         public string Username { get; set; }
 
         [DataMember]
-        public FileUploadRequestDTO ImageFile { get; set; }
+        public FileUploadRequestDTOs ImageFile { get; set; }
 
         [DataMember]
         public string Password { get; set; }
@@ -40,7 +40,7 @@ namespace Common.Models
         [DataMember]
         public Guid Id { get; set; }
 
-        public UserUpdateNetworkModel(UserUpdateModel user)
+        public UserUpdateNetworkModel(UserUpdateModel user) //konsturktor koji prima UserUpdateModel model koji prima podatke sa fronteda kad se menja profil
         {
             PreviousEmail = user.PreviousEmail;
 
@@ -62,10 +62,10 @@ namespace Common.Models
             if (user.Password != null) Password = user.Password;
 
         }
-
-        public FileUploadRequestDTO makeFileOverNetwork(IFormFile file)
+        //zbog slanja fajla kroz mrezu
+        public FileUploadRequestDTOs makeFileOverNetwork(IFormFile file) //isto kao i kod UserModel funkcija za fajl-sliku, u njoj imam ime fajla, tip sadrzaja, i bajt sadrzaja fajla
         {
-            FileUploadRequestDTO fileOverNetwork;
+            FileUploadRequestDTOs fileOverNetwork;
 
             using (var stream = file.OpenReadStream())
             {
@@ -76,7 +76,7 @@ namespace Common.Models
                     fileContent = memoryStream.ToArray();
                 }
 
-                fileOverNetwork = new FileUploadRequestDTO(file.FileName, file.ContentType, fileContent);
+                fileOverNetwork = new FileUploadRequestDTOs(file.FileName, file.ContentType, fileContent);
             }
 
             return fileOverNetwork;

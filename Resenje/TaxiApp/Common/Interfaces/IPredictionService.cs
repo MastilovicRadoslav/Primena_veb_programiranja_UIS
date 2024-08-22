@@ -8,6 +8,6 @@ namespace Common.Interfaces
     public interface IPredictionService : IService
     {
         [OperationContract]
-        Task<PredictionModel> GetPredictionPrice(string currentLocation, string destination);
+        Task<PredictionModel> GetPredictionPrice(string currentLocation, string destination); //Servis za predvidjanje cene izabrane voznje
     }
 }

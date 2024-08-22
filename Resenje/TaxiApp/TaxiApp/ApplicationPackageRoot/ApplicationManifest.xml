@@ -4,10 +4,10 @@
     <Parameter Name="UsersService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="UsersService_PartitionCount" DefaultValue="1" />
     <Parameter Name="UsersService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="PredictionService_InstanceCount" DefaultValue="-1" />
     <Parameter Name="DrivingService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="DrivingService_PartitionCount" DefaultValue="1" />
     <Parameter Name="DrivingService_TargetReplicaSetSize" DefaultValue="3" />
-    <Parameter Name="PredictionService_InstanceCount" DefaultValue="-1" />
     <Parameter Name="WebApi_InstanceCount" DefaultValue="-1" />
     <Parameter Name="WebApi_ASPNETCORE_ENVIRONMENT" DefaultValue="" />
   </Parameters>
@@ -19,11 +19,11 @@
     <ConfigOverrides />
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="DrivingServicePkg" ServiceManifestVersion="1.0.0" />
+    <ServiceManifestRef ServiceManifestName="PredictionServicePkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="PredictionServicePkg" ServiceManifestVersion="1.0.0" />
+    <ServiceManifestRef ServiceManifestName="DrivingServicePkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
   </ServiceManifestImport>
   <ServiceManifestImport>
@@ -44,15 +44,15 @@
         <UniformInt64Partition PartitionCount="[UsersService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
       </StatefulService>
     </Service>
-    <Service Name="DrivingService" ServicePackageActivationMode="ExclusiveProcess">
-      <StatefulService ServiceTypeName="DrivingServiceType" TargetReplicaSetSize="[DrivingService_TargetReplicaSetSize]" MinReplicaSetSize="[DrivingService_MinReplicaSetSize]">
-        <UniformInt64Partition PartitionCount="[DrivingService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
-      </StatefulService>
-    </Service>
     <Service Name="PredictionService" ServicePackageActivationMode="ExclusiveProcess">
       <StatelessService ServiceTypeName="PredictionServiceType" InstanceCount="[PredictionService_InstanceCount]">
         <SingletonPartition />
       </StatelessService>
+    </Service>
+    <Service Name="DrivingService" ServicePackageActivationMode="ExclusiveProcess">
+      <StatefulService ServiceTypeName="DrivingServiceType" TargetReplicaSetSize="[DrivingService_TargetReplicaSetSize]" MinReplicaSetSize="[DrivingService_MinReplicaSetSize]">
+        <UniformInt64Partition PartitionCount="[DrivingService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+      </StatefulService>
     </Service>
     <Service Name="WebApi" ServicePackageActivationMode="ExclusiveProcess">
       <StatelessService ServiceTypeName="WebApiType" InstanceCount="[WebApi_InstanceCount]">

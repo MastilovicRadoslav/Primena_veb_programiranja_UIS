@@ -1,5 +1,5 @@
 import axios from "axios";
-import { SHA256 } from 'crypto-js';
+import { SHA256 } from 'crypto-js'; //hesiranje lozinke prije slanja na server
 export function DropErrorForField(firstNameError, lastNameError, birthdayError, addressError, usernameError, emailError, passwordError, repeatPasswordError, imageUrlError) {
     let isValid = true;
 
@@ -67,30 +67,30 @@ export async function RegularRegisterApiCall(
         repeatPasswordError,
         imageUrlError
     );
-    if (isCompleted) {
-        const formData = new FormData();
+    if (isCompleted) { //ako nema gresaka
+        const formData = new FormData(); //slanje podataka
         formData.append('firstName', firstName);
         formData.append('lastName', lastName);
         formData.append('birthday', birthday);
         formData.append('address', address);
         formData.append('email', email);
-        const hashedPassword = SHA256(password).toString();
+        const hashedPassword = SHA256(password).toString(); //hesovanje
         formData.append('password', hashedPassword);
         formData.append('typeOfUser', typeOfUser);
         formData.append('username', username);
         formData.append('imageUrl', imageUrl);
-        
+        //da li su hesirane vrednosti lozinke i ponovljene lozinke iste
         if (formData.get("password") === SHA256(repeatPassword).toString()) {
             try {
-                const response = await axios.post(apiEndpoint, formData, {
+                const response = await axios.post(apiEndpoint, formData, { //slanje POST zahteva
                     headers: {
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'multipart/form-data' //salju se fajlovi (slika se konkretno salje)
                     }
                  
                 });
                 return true;
             } catch (error) {
-                if(error.response.status == 409){
+                if(error.response.status == 409){ //to je greska 409
                     alert(error.response.data+"\nTry another email!!!");
                 }
             }

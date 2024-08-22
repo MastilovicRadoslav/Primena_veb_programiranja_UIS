@@ -51,7 +51,7 @@ namespace Common.Models
 
 
         [DataMember]
-        public FileUploadRequestDTO ImageFile { get; set; }
+        public FileUploadRequestDTOs ImageFile { get; set; } //za prenos podataka o fajlu, kad slika stigne sa fronteda na bekend konvertujem je preko funkcije u ovo da imam sve sto treba
 
         [DataMember]
         public UserVerificationStatus.Status Status { get; set; }
@@ -59,18 +59,18 @@ namespace Common.Models
         [DataMember]
         public Guid Id { get; set; }
 
-        public string ImageUrl { get; set; }
+        public string ImageUrl { get; set; } // fajl-slika koja je upload sa fronteda forme
 
 
-        public UserModel(UserRegistrationModel userRegister)
+        public UserModel(UserRegistrationModel userRegister) // za UserRegistrationModel napralvjen konstruktor
         {
             FirstName = userRegister.FirstName;
             LastName = userRegister.LastName;
-            Birthday = DateTime.ParseExact(userRegister.Birthday, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            Birthday = DateTime.ParseExact(userRegister.Birthday, "yyyy-MM-dd", CultureInfo.InvariantCulture); //konverzija
             Address = userRegister.Address;
             Email = userRegister.Email;
-            Password = userRegister.Password;
-            TypeOfUser = Enum.TryParse<UserRoleType.Roles>(userRegister.TypeOfUser, true, out var role) ? role : UserRoleType.Roles.Rider;
+            Password = userRegister.Password; //hesirao sam je na frontedu mada sam mogao i ovde
+            TypeOfUser = Enum.TryParse<UserRoleType.Roles>(userRegister.TypeOfUser, true, out var role) ? role : UserRoleType.Roles.Rider; //konverzija
             Username = userRegister.Username;
             Id = Guid.NewGuid();
             switch (TypeOfUser)
@@ -91,7 +91,7 @@ namespace Common.Models
                     break;
 
             }
-            ImageFile = makeFileOverNetwork(userRegister.ImageUrl);
+            ImageFile = makeFileOverNetwork(userRegister.ImageUrl); //konvertovanje slike fajla koji je poslat sa fonteda u prenosivi DTOs objekat koji sam napravio da sadrzi sve potrebne inf o fajlu za cuvanje ili prenos preko mreze
         }
 
 
@@ -100,7 +100,7 @@ namespace Common.Models
         {
         }
 
-        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoleType.Roles typeOfUser, FileUploadRequestDTO imageFile, Guid id)
+        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoleType.Roles typeOfUser, FileUploadRequestDTOs imageFile, Guid id)
         {
             Address = address;
             AverageRating = averageRating;
@@ -119,7 +119,7 @@ namespace Common.Models
             Id = id;
         }
 
-        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoleType.Roles typeOfUser, FileUploadRequestDTO imageFile, string imageUrl, UserVerificationStatus.Status s, Guid id) : this(address, averageRating, sumOfRatings, numOfRatings, birthday, email, isVerified, isBlocked, firstName, lastName, password, username, typeOfUser, imageFile, id)
+        public UserModel(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string password, string username, UserRoleType.Roles typeOfUser, FileUploadRequestDTOs imageFile, string imageUrl, UserVerificationStatus.Status s, Guid id) : this(address, averageRating, sumOfRatings, numOfRatings, birthday, email, isVerified, isBlocked, firstName, lastName, password, username, typeOfUser, imageFile, id)
         {
             Address = address;
             AverageRating = averageRating;
@@ -140,20 +140,20 @@ namespace Common.Models
             Id = id;
         }
 
-        public static FileUploadRequestDTO makeFileOverNetwork(IFormFile file)
+        public static FileUploadRequestDTOs makeFileOverNetwork(IFormFile file) //slanje slike na bekend i cuvanje u skladistu
         {
-            FileUploadRequestDTO fileOverNetwork;
+            FileUploadRequestDTOs fileOverNetwork;
 
             using (var stream = file.OpenReadStream())
             {
                 byte[] fileContent;
                 using (var memoryStream = new MemoryStream())
                 {
-                    stream.CopyTo(memoryStream);
-                    fileContent = memoryStream.ToArray();
+                    stream.CopyTo(memoryStream); //kopiranje
+                    fileContent = memoryStream.ToArray(); //niz bajtova
                 }
 
-                fileOverNetwork = new FileUploadRequestDTO(file.FileName, file.ContentType, fileContent);
+                fileOverNetwork = new FileUploadRequestDTOs(file.FileName, file.ContentType, fileContent);
             }
 
             return fileOverNetwork;

@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Common.DTOs
 {
     [DataContract]
-    public class UserDetailsDTO
+    public class FullUserDTOs //slicno UserModel koristio sam za GetUsers
     {
 
         [DataMember]
@@ -46,7 +46,7 @@ namespace Common.DTOs
         public UserRoleType.Roles Roles { get; set; }
 
         [DataMember]
-        public FileUploadRequestDTO ImageFile { get; set; }
+        public FileUploadRequestDTOs ImageFile { get; set; }
 
         [DataMember]
         public string Password { get; set; }
@@ -58,7 +58,7 @@ namespace Common.DTOs
         public Guid Id { get; set; }
 
 
-        public UserDetailsDTO(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string username, UserRoleType.Roles roles, FileUploadRequestDTO imageFile, string password, UserVerificationStatus.Status status, Guid id)
+        public FullUserDTOs(string address, double averageRating, int sumOfRatings, int numOfRatings, DateTime birthday, string email, bool isVerified, bool isBlocked, string firstName, string lastName, string username, UserRoleType.Roles roles, FileUploadRequestDTOs imageFile, string password, UserVerificationStatus.Status status, Guid id)
         {
             Address = address;
             AverageRating = averageRating;
@@ -78,7 +78,7 @@ namespace Common.DTOs
             Id = id;
         }
 
-        public UserDetailsDTO()
+        public FullUserDTOs()
         {
         }
     }

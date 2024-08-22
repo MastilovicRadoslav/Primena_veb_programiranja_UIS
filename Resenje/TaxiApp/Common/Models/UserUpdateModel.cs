@@ -2,7 +2,7 @@
 
 namespace Common.Models
 {
-    public class UserUpdateModel
+    public class UserUpdateModel //Ova klasa predstavlja podatke koje frontend šalje backendu kada korisnik želi da ažurira svoje informacije
     {
         public string? FirstName { get; set; }
 

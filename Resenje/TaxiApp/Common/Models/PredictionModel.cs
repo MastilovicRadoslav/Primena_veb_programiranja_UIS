@@ -3,19 +3,19 @@
 namespace Common.Models
 {
     [DataContract]
-    public class PredictionModel
+    public class PredictionModel //za procenjenu cenu 
     {
         [DataMember]
-        public double PredictionPrice { get; set; }
+        public double EstimatedPrice { get; set; } //cena
         [DataMember]
-        public TimeSpan DriversArivalSeconds { get; set; }
+        public TimeSpan DriversArivalSeconds { get; set; } //vreme dolaska vozaca  min
 
         [DataMember]
-        public TimeSpan RideTime { get; set; }
+        public TimeSpan RideTime { get; set; } //trjanje voznje
 
-        public PredictionModel(double predictionPrice, TimeSpan driversArivalSeconds, TimeSpan rideTime)
+        public PredictionModel(double estimatedPrice, TimeSpan driversArivalSeconds, TimeSpan rideTime)
         {
-            PredictionPrice = predictionPrice;
+            EstimatedPrice = estimatedPrice;
             DriversArivalSeconds = driversArivalSeconds;
             RideTime = rideTime;
         }

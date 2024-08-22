@@ -3,18 +3,18 @@ import { useNavigate } from "react-router-dom";
 import '../Styles/DashboardPage.css';
 import '../Styles/ProfilePage.css';
 import { MdPerson } from 'react-icons/md';
-import { FaCar, FaRoad, FaSignOutAlt } from 'react-icons/fa';
+import { FaCheckCircle, FaCar, FaRoad, FaSignOutAlt, FaSpinner, FaTimes } from 'react-icons/fa';
 import { makeImage, convertDateTimeToDateOnly, changeUserFields } from '../Services/ProfileServices.js';
 import { getUserInfo } from '../Services/ProfileServices.js';
 import { getAllAvailableRides, AcceptDrive, getCurrentRide } from '../Services/DriverServices.js';
 import RidesDriver from './RidesDriver.jsx';
 
 export default function DashboardDriver(props) {
-    const user = props.user;
+    const user = props.user; //korisnik kao za svaku komponentu
     const apiEndpoint = process.env.REACT_APP_CHANGE_USER_FIELDS;
     const userId = user.id;
-    localStorage.setItem("userId", userId);
-    const jwt = localStorage.getItem('token');
+    localStorage.setItem("userId", userId); 
+    const jwt = localStorage.getItem('token');//JWS token
     const navigate = useNavigate();
 
     const apiForCurrentUserInfo = process.env.REACT_APP_GET_USER_INFO;
@@ -36,8 +36,8 @@ export default function DashboardDriver(props) {
     const [status, setStatus] = useState('');
     const [sumOfRatings, setSumOfRatings] = useState('');
     const [username, setUsername] = useState('');
-    const [view, setView] = useState('editProfile');
-    const [isEditing, setIsEditing] = useState(false);
+    const [view, setView] = useState('editProfile'); //default prikaz
+    const [isEditing, setIsEditing] = useState(false); //mod uredjivanja profila
 
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -46,31 +46,28 @@ export default function DashboardDriver(props) {
 
     const [initialUser, setInitialUser] = useState({});
     const [tripIsActive, setTripIsActive] = useState(false);
-    const [rides, setRides] = useState([]);
+    const [rides, setRides] = useState([]); //sve dostupne voznje koje vozac moze da prihvati
     const [currentRide, setCurrentRides] = useState();
     const apiToGetAllRides = process.env.REACT_APP_GET_ALL_RIDES_ENDPOINT;
     const [clockSimulation, setClockSimulation] = useState('');
     const [showOverlay, setShowOverlay] = useState(false);
-    const [message, setMessage] = useState('You don\'t have an active trip!');
+    const [message, setMessage] = useState('You don\'t have an active trip for acceptance!');
 
-    // Funkcija za ažuriranje poruke
     const updateMessage = () => {
         if (rides.length === 0) {
-            setMessage('You don\'t have an active trip!');
+            setMessage('You don\'t have an active trip for acceptance!');
         } else {
-            setMessage('Available rides, please accept one.');
+            setMessage('You have available rides, please select and accept one!');
         }
     };
 
-    // UseEffect za periodičnu promenu poruke
     useEffect(() => {
-        updateMessage(); // Pozivamo funkciju odmah kako bismo postavili početnu poruku
-        const intervalId = setInterval(updateMessage, 5000); // Ažuriramo poruku svakih 5 sekundi
-
-        return () => clearInterval(intervalId); // Čišćenje intervala na unmount
+        updateMessage();
+        const intervalId = setInterval(updateMessage, 5000);
+        return () => clearInterval(intervalId);
     }, [rides]);
 
-    useEffect(() => {
+    useEffect(() => { //dobijanje informacija o korisniku sistema
         const fetchUserInfo = async () => {
             try {
                 const userInfo = await getUserInfo(jwt, apiForCurrentUserInfo, userId);
@@ -101,7 +98,7 @@ export default function DashboardDriver(props) {
         fetchUserInfo();
     }, [jwt, apiForCurrentUserInfo, userId]);
 
-    const handleSaveClick = async () => {
+    const handleSaveClick = async () => { //salje podatke o izmenama na korisnicki profil
         const ChangedUser = await changeUserFields(apiEndpoint, firstName, lastName, birthday, address, email, password, selectedFile, username, jwt, newPassword, repeatNewPassword, oldPassword, userId);
 
         setInitialUser(ChangedUser);
@@ -127,12 +124,12 @@ export default function DashboardDriver(props) {
         setIsEditing(false);
     }
 
-    const handleSignOut = () => {
+    const handleSignOut = () => { //uklanja JWT token iz lokalne memorije i vraca korisnika na pocetnu stranicu
         localStorage.removeItem('token');
         navigate('/');
     };
 
-    const handleEditProfile = async () => setView('editProfile');
+    const handleEditProfile = async () => setView('editProfile'); //setovanje prikaza editProfile
 
     const handleViewRides = async () => {
         try {
@@ -145,7 +142,7 @@ export default function DashboardDriver(props) {
 
     const handleDriveHistory = () => setView("driveHistory");
 
-    const fetchRides = async () => {
+    const fetchRides = async () => {//dobavlja sve dostupne voznje koje vozac moze da prihvati
         try {
             const data = await getAllAvailableRides(jwt, apiToGetAllRides);
             setRides(data.rides);
@@ -154,20 +151,19 @@ export default function DashboardDriver(props) {
         }
     };
 
-    const handleAcceptNewDrive = async (tripId) => {
+    const handleAcceptNewDrive = async (tripId) => {//omogucava vozacu da prihvati novu voznju
         try {
             const data = await AcceptDrive(process.env.REACT_APP_ACCEPT_RIDE, userId, tripId, jwt);
             setCurrentRides(data.ride);
             setTripIsActive(true);
-            setShowOverlay(true); // Show overlay when the trip is active
-            // Pozivamo fetchRides da ažuriramo tabelu
+            setShowOverlay(true);
             fetchRides();
         } catch (error) {
             console.error('Error accepting drive:', error.message);
         }
     };
 
-    const handleEditClick = () => setIsEditing(true);
+    const handleEditClick = () => setIsEditing(true);//editovanje profila
 
     const handleCancelClick = () => {
         setIsEditing(false);
@@ -221,12 +217,12 @@ export default function DashboardDriver(props) {
                     if (data.trip.accepted && data.trip.secondsToDriverArrive > 0) {
                         setClockSimulation(`You will arrive in: ${data.trip.secondsToDriverArrive} seconds`);
                     } else if (data.trip.accepted && data.trip.secondsToEndTrip > 0) {
-                        setClockSimulation(`The trip will end in: ${data.trip.secondsToEndTrip} seconds`);
+                        setClockSimulation(`The journey will end in: ${data.trip.secondsToEndTrip} seconds`);
                     } else if (data.trip.accepted && data.trip.secondsToDriverArrive === 0 && data.trip.secondsToEndTrip === 0) {
                         setClockSimulation("Your trip has ended");
-                        setShowOverlay(false); // Hide overlay when trip ends
+                        setShowOverlay(false);
                         setTripIsActive(false);
-                        fetchRides(); // Ažuriranje tabele vožnji
+                        fetchRides();
                     }
                 } else {
                     setClockSimulation("You don't have an active trip!");
@@ -248,7 +244,6 @@ export default function DashboardDriver(props) {
         return () => clearInterval(intervalId);
     }, [jwt, apiEndpointForCurrentRide, userId]);
 
-    // Proveravamo da li treba prikazati overlay
     const isOverlayVisible = clockSimulation?.startsWith('You will arrive in') ||
         clockSimulation?.startsWith('The trip will end in') ||
         clockSimulation?.startsWith('Your trip has ended');
@@ -271,8 +266,12 @@ export default function DashboardDriver(props) {
                     {!tripIsActive && (
                         <>
                             <button className="nav-button" onClick={handleEditProfile}>Profile</button>
-                            <button className="nav-button" onClick={handleViewRides}>New rides</button>
-                            <button className="nav-button" onClick={handleDriveHistory}>Rides history</button>
+                            {!isBlocked && isVerified === true ? (
+                                <>
+                                    <button className="nav-button" onClick={handleViewRides}>New rides</button>
+                                    <button className="nav-button" onClick={handleDriveHistory}>Rides history</button>
+                                </>
+                            ) : null}
                         </>
                     )}
                 </div>
@@ -363,14 +362,16 @@ export default function DashboardDriver(props) {
                                     )}
                                 </div>
                             </div>
-                            {isEditing ? (
-                                <div className="edit-profile-buttons">
-                                    <button className="edit-button" onClick={handleSaveClick}>Save</button>
-                                    <button className="cancel-button" onClick={handleCancelClick}>Cancel</button>
-                                </div>
-                            ) : (
-                                <button className="edit-button" onClick={handleEditClick}>Edit</button>
-                            )}
+                            {!isBlocked && isVerified === true ? (
+                                isEditing ? (
+                                    <div className="edit-profile-buttons">
+                                        <button className="edit-button" onClick={handleSaveClick}>Save</button>
+                                        <button className="cancel-button" onClick={handleCancelClick}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <button className="edit-button" onClick={handleEditClick}>Edit</button>
+                                )
+                            ) : null}
                         </div>
                     )}
                     {view === 'rides' && (

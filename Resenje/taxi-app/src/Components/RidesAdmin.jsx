@@ -6,7 +6,7 @@ export default function RidesAdmin() {
     const [rides, setRides] = useState([]);
     const token = localStorage.getItem('token');
     const apiEndpoint = process.env.REACT_APP_GET_ALL_RIDES_ADMIN; // 
-    // Function to fetch all drivers
+    // Funckija za dobavljanje svih voznji
     const fetchDrivers = async () => {
         try {
             const data = await getAllRidesAdmin(token, apiEndpoint);
@@ -18,7 +18,7 @@ export default function RidesAdmin() {
     };
 
     useEffect(() => {
-        fetchDrivers();
+        fetchDrivers(); // Pozivanje funkcije za dobavljanje vožnji nakon renderovanja komponente
     }, []);
 
     

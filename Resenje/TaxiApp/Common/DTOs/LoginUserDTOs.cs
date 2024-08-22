@@ -3,7 +3,7 @@
 namespace Common.DTOs
 {
     [DataContract]
-    public class LoginUserDTO
+    public class LoginUserDTOs //prima podatke sa fronteda kad se korisnik loguje
     {
         [DataMember]
         public string Email { get; set; }
@@ -11,7 +11,7 @@ namespace Common.DTOs
         [DataMember]
         public string Password { get; set; }
 
-        public LoginUserDTO(string email, string password)
+        public LoginUserDTOs(string email, string password)
         {
             Email = email;
             Password = password;

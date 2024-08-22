@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { GoogleLogin } from 'react-google-login';
+import { GoogleLogin } from 'react-google-login'; //Google register
 import '../Styles/RegisterPage.css';
 import { gapi } from 'gapi-script';
 import { Link } from 'react-router-dom';
@@ -7,9 +7,9 @@ import { RegularRegisterApiCall } from '../Services/RegisterServices.js';
 import { useNavigate } from 'react-router-dom';
 
 export default function Register() {
-    const clientId = process.env.REACT_APP_CLIENT_ID;
+    const clientId = process.env.REACT_APP_CLIENT_ID; //Google register
     const regularRegisterApiEndpoint = process.env.REACT_APP_REGISTER_API_URL;
-
+    //informacije o odredjenoj kompoennti
     const [firstName, setFirstName] = useState('');
     const [firstNameError, setFirstNameError] = useState(false);
 
@@ -41,9 +41,11 @@ export default function Register() {
     const [imageUrlError, setImageUrlError] = useState(false);
 
     const [userGoogleRegister, setUserGoogleRegister] = useState('');
+
     const navigate = useNavigate();
+
     const handleRegisterClick = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); //sprecavanje podrazumevanog ponasanja
 
         const resultOfRegister = await RegularRegisterApiCall(
             firstNameError,
@@ -104,13 +106,13 @@ export default function Register() {
         setRepeatPassword(value);
         setRepeatPasswordError(value !== password);
     };
-
+    // Setuje grešku ako nije odabrana nijedna datoteka
     const handleImageUrlChange = (e) => {
         const selectedFile = e.target.files[0];
         setImageUrl(selectedFile || null);
         setImageUrlError(!selectedFile);
     };
-
+    //Google autentifikacija inicijalizacija, izvrsavanje sporednih efekata
     useEffect(() => {
         if (clientId) {
             function start() {
@@ -123,7 +125,7 @@ export default function Register() {
         } else {
             console.error("Client ID is not defined in .env file");
         }
-    }, [clientId]);
+    }, [clientId]); //ako se clientId nikad ne promeni, useEffect ce se pokrenuti samo jednom prilikom prvog renderovanja komponente
 
     const onSuccess = (res) => {
         const profile = res.profileObj;
@@ -135,7 +137,7 @@ export default function Register() {
         setFirstNameError(!profile.givenName);
         setLastNameError(!profile.familyName);
 
-        alert("Please complete other fields!");
+        alert("Please fill in the other fields for Google registration!");
     }
 
     const onFailure = (res) => {
@@ -243,7 +245,7 @@ export default function Register() {
                         clientId={clientId}
                         buttonText="Register with Google"
                         onSuccess={onSuccess}
-                        onFailure={onFailure}
+                        onFailure={0}
                         cookiePolicy={'single_host_origin'}
                     />
                     <br />

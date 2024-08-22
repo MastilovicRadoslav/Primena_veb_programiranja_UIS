@@ -4,9 +4,9 @@ import { FaCar, FaRoad, FaSignOutAlt, FaStar } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
 import { makeImage, convertDateTimeToDateOnly, changeUserFields } from '../Services/ProfileServices.js';
 import { getUserInfo } from '../Services/ProfileServices.js';
-import '../Styles/DashboardPage.css'; // Za navigacioni bar
-import '../Styles/ProfilePage.css'; // Za stilizaciju profila
-import '../Styles/NewDrivePage.css'; // Posebni stilovi za NewDrive komponentu
+import '../Styles/DashboardPage.css';
+import '../Styles/ProfilePage.css';
+import '../Styles/NewDrivePage.css';
 import { getEstimation, AcceptDrive, convertTimeStringToMinutes } from '../Services/PredictionServices.js';
 import { getCurrentRide } from '../Services/RiderServices.js';
 import RidesRider from './RidesRider.jsx';
@@ -16,18 +16,21 @@ export default function RiderDashboard(props) {
     const user = props.user;
     const jwt = localStorage.getItem('token');
     const navigate = useNavigate();
+
     const apiEndpoint = process.env.REACT_APP_CHANGE_USER_FIELDS;
     const apiForCurrentUserInfo = process.env.REACT_APP_GET_USER_INFO;
     const apiEndpointEstimation = process.env.REACT_APP_GET_ESTIMATION_PRICE;
     const apiEndpointAcceptDrive = process.env.REACT_APP_ACCEPT_SUGGESTED_DRIVE;
     const apiEndpointForCurrentDrive = process.env.REACT_APP_CURRENT_TRIP;
 
+    const userId = user.id;
+    localStorage.setItem("userId", userId);
+
     const [destination, setDestination] = useState('');
     const [currentLocation, setCurrentLocation] = useState('');
     const [estimation, setEstimation] = useState('');
     const [driversArivalSeconds, setDriversArivalSeconds] = useState('');
-    const userId = user.id;
-    localStorage.setItem("userId", userId);
+
     const [currentUser, setUserInfo] = useState('');
     const [address, setAddress] = useState('');
     const [averageRating, setAverageRating] = useState('');
@@ -47,6 +50,7 @@ export default function RiderDashboard(props) {
 
     const [view, setView] = useState('editProfile');
     const [isEditing, setIsEditing] = useState(false);
+
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [repeatNewPassword, setRepeatNewPassword] = useState('');
@@ -191,22 +195,22 @@ export default function RiderDashboard(props) {
                 const data = await getCurrentRide(jwt, apiEndpointForCurrentDrive, userId);
 
                 if (data.error && data.error.status === 400) {
-                    setClockSimulation("You don't have an active trip!");
+                    setClockSimulation("You don't have any active trips; you haven't requested one!");
                     return;
                 }
 
                 if (data.trip) {
                     if (!data.trip.accepted) {
-                        setClockSimulation("Your current ticket is not accepted by any driver!");
+                        setClockSimulation("Your current ticket has not been accepted by any driver!");
                     } else if (data.trip.accepted && data.trip.secondsToDriverArrive > 0) {
-                        setClockSimulation(`The driver will arrive in: ${data.trip.secondsToDriverArrive} seconds`);
+                        setClockSimulation(`The driver will arrive for: ${data.trip.secondsToDriverArrive} seconds`);
                     } else if (data.trip.accepted && data.trip.secondsToEndTrip > 0) {
-                        setClockSimulation(`The trip will end in: ${data.trip.secondsToEndTrip} seconds`);
+                        setClockSimulation(`The journey will end in: ${data.trip.secondsToEndTrip} seconds`);
                     } else if (data.trip.accepted && data.trip.secondsToDriverArrive === 0 && data.trip.secondsToEndTrip === 0) {
                         setClockSimulation("Your trip has ended");
                     }
                 } else {
-                    setClockSimulation("You don't have an active trip!");
+                    setClockSimulation("You don't have any active trips; you haven't requested one!");
                 }
             } catch (error) {
                 console.error("Error fetching ride data:", error);
@@ -220,8 +224,8 @@ export default function RiderDashboard(props) {
     }, [jwt, apiEndpointForCurrentDrive, userId]);
 
     // Definisanje poruka za prikazivanje overlay-a
-    const isOverlayVisible = clockSimulation?.startsWith('The driver will arrive in') ||
-        clockSimulation?.startsWith('The trip will end in') ||
+    const isOverlayVisible = clockSimulation?.startsWith('The driver will arrive for') ||
+        clockSimulation?.startsWith('The journey will end in') ||
         clockSimulation?.startsWith('Your trip has ended');
 
     return (
@@ -367,8 +371,8 @@ export default function RiderDashboard(props) {
                                     </button>
                                     {estimation && (
                                         <>
-                                            <p className="estimation-text">Estimated Price: {estimation} €</p>
-                                            <p className="estimation-text">Estimated Arrival Time: {driversArivalSeconds} min</p>
+                                            <p className="estimation-text">Predicted Ride Price: {estimation} €</p>
+                                            <p className="estimation-text">Predicted Arrival Time of Blue Taxi: {driversArivalSeconds} min</p>
                                             <button className="button-primary" onClick={handleAcceptDriveSubmit}>
                                                 Accept Drive
                                             </button>

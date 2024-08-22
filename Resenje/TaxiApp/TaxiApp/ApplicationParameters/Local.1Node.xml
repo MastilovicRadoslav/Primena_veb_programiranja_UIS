@@ -7,7 +7,6 @@
     <Parameter Name="DrivingService_PartitionCount" Value="1" />
     <Parameter Name="DrivingService_MinReplicaSetSize" Value="1" />
     <Parameter Name="DrivingService_TargetReplicaSetSize" Value="1" />
-    <Parameter Name="PredictionService_InstanceCount" Value="1" />
     <Parameter Name="WebApi_InstanceCount" Value="1" />
     <Parameter Name="WebApi_ASPNETCORE_ENVIRONMENT" Value="Development" />
   </Parameters>

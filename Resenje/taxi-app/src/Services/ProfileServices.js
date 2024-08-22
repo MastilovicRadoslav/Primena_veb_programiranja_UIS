@@ -2,21 +2,21 @@ import axios from "axios";
 import { SHA256 } from 'crypto-js';
 import qs from 'qs';
 //This function make image for display on page 
-export function makeImage(imageFile) {
+export function makeImage(imageFile) { //prima imageFile koji sadrzi sve ono sto smo na serveru za fajl-sliku definisali
     console.log("Usao");
     if (imageFile.fileContent) {
-        const byteCharacters = atob(imageFile.fileContent);
+        const byteCharacters = atob(imageFile.fileContent); //niz bajtova
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: imageFile.contentType });
-        const url = URL.createObjectURL(blob);
+        const byteArray = new Uint8Array(byteNumbers); //dekodira ga u Uint8Array
+        const blob = new Blob([byteArray], { type: imageFile.contentType }); //kreira blob
+        const url = URL.createObjectURL(blob); //prikaz slike u komponenti
         return url;
     }
 }
-export function convertDateTimeToDateOnly(dateTime) {
+export function convertDateTimeToDateOnly(dateTime) { //prima datum u formatu DateTime pa ga parsita i vraca u DD-MM-YYYY
     const dateObj = new Date(dateTime);
 
     // Get the date components
@@ -30,14 +30,14 @@ export function convertDateTimeToDateOnly(dateTime) {
 
 
 export async function changeUserFields(apiEndpoint, firstName, lastName, birthday, address, email, password, imageUrl, username, jwt, newPassword, newPasswordRepeat, oldPasswordRepeat,id) {
-    const formData = new FormData();
+    const formData = new FormData(); //formData sa svim potrebnim informacijama za azuriranje korisnika
     formData.append('FirstName', firstName);
     formData.append('LastName', lastName);
     formData.append('Birthday', birthday);
     formData.append('Address', address);
     formData.append('Email', email);
     formData.append("Id",id);
-    if(newPassword!='') {
+    if(newPassword!='') { //ako je unesena nova lozinka ona se opet mora hesovat
         const hashPw = SHA256(newPassword).toString();
         formData.append('Password', hashPw);
     }
@@ -50,12 +50,12 @@ export async function changeUserFields(apiEndpoint, firstName, lastName, birthda
 
     if(oldPasswordRepeat!='' || newPasswordRepeat!='' || newPassword!='' && checkNewPassword(password,oldPasswordRepeat,newPassword,newPasswordRepeat)){
             console.log("Succesfully entered new passwords");
-            const dataOtherCall = await changeUserFieldsApiCall(apiEndpoint,formData,jwt);
+            const dataOtherCall = await changeUserFieldsApiCall(apiEndpoint,formData,jwt); //na server salje
             console.log("data other call",dataOtherCall);
-            return dataOtherCall.changedUser;
-    }else if(oldPasswordRepeat=='' && newPasswordRepeat=='' && newPassword==''){
+            return dataOtherCall.changedUser; //vraca korisnika sa azuirranim poljima
+    }else if(oldPasswordRepeat=='' && newPasswordRepeat=='' && newPassword==''){ //ako nista nije mijenjao od sifri korisnik nema potrebe za provjerom lozinki sa funkcijom
         const data = await changeUserFieldsApiCall(apiEndpoint,formData,jwt);
-        return data.changedUser;
+        return data.changedUser; //isto
     }
 
     
@@ -64,8 +64,8 @@ export async function changeUserFields(apiEndpoint, firstName, lastName, birthda
 
 export async function getUserInfo(jwt, apiEndpoint, userId) {
     try {
-        const config = {
-            headers: {
+        const config = { //JWT token se preuzima iz zaglavlja za autentifikaciju
+            headers: { //Ovo zaglavlje šalje JWT token serveru za autentifikaciju korisnika.
                 Authorization: `Bearer ${jwt}`,
                 'Content-Type': 'application/json'
             }
@@ -73,9 +73,9 @@ export async function getUserInfo(jwt, apiEndpoint, userId) {
 
         const queryParams = qs.stringify({ Id: userId });
 
-        const url = `${apiEndpoint}?${queryParams}`;
-        const response = await axios.get(url, config);
-        return response.data;
+        const url = `${apiEndpoint}?${queryParams}`; //ovako salje id da bih znao za koji da iscitam informacije
+        const response = await axios.get(url, config); //get
+        return response.data; //inf o korisniku
     } catch (error) {
         console.error('Error fetching data (async/await):', error.message);
         throw error;
@@ -84,16 +84,16 @@ export async function getUserInfo(jwt, apiEndpoint, userId) {
 
 
 
-export async function changeUserFieldsApiCall(apiEndpoint,formData,jwt){
+export async function changeUserFieldsApiCall(apiEndpoint,formData,jwt){ //put metoda za izmenu polja
     try {
         const response = await axios.put(apiEndpoint, formData, {
             headers: {
-                'Authorization': `Bearer ${jwt}`,
+                'Authorization': `Bearer ${jwt}`, //JWT token standardno
                 'Content-Type': 'multipart/form-data'
             }
         
         });
-        return response.data;
+        return response.data; //vraca azuriranog korisnika
     } catch (error) {
         console.error('Error while calling API to change user fields:', error);
     }
@@ -105,6 +105,7 @@ export async function changeUserFieldsApiCall(apiEndpoint,formData,jwt){
  NewPassword and newPasswordRepeat are string need to be hashed
  newPassword, newPasswordRepeat, oldPassword, oldPasswordRepeat
  */
+//u sustini ako lozina nije promenjena provjerava se da li su stare lozinke iste, a ako je unesena nova lzonika provjerava da li su nove lozinke iste. Mora se uneti stara lozinka koja ce se provjerit sa lozinkom u bazi da bi korisnik mogao tek onda uneti novu
 export function checkNewPassword(oldPassword,oldPasswordRepeat,newPassword,newPasswordRepeat) {
     const hashedPassword = SHA256(oldPasswordRepeat).toString();
     if (oldPassword != hashedPassword) {

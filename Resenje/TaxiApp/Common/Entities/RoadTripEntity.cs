@@ -2,7 +2,7 @@
 
 namespace Common.Entities
 {
-    public class RoadTripEntity : TableEntity
+    public class RoadTripEntity : TableEntity //koristim za skaldistenje podataka o voznji u bazu podataka, sve informacije kao i za RoadTripModel za upis u kolekkciju podataka
     {
         public Guid RiderId { get; set; }
         public Guid DriverId { get; set; }
@@ -19,11 +19,11 @@ namespace Common.Entities
 
         public int SecondsToDriverArive { get; set; }
 
-        public int SecondsToEndTrip { get; set; }
+        public int SecondsToEndTrip { get; set; } //proiz
 
-        public bool IsFinished { get; set; }
+        public bool IsFinished { get; set; } //proiz
 
-        public bool IsRated { get; set; }
+        public bool IsRated { get; set; } //proiz
         public RoadTripEntity()
         {
         }
@@ -37,10 +37,10 @@ namespace Common.Entities
             Accepted = accepted;
             Price = price;
             TripId = triId;
-            RowKey = triId.ToString();
+            RowKey = triId.ToString();  // RowKey i PartitionKey se postavljaju na vrednost TripId
             PartitionKey = triId.ToString();
             SecondsToDriverArive = minutes;
-            SecondsToEndTrip = 0;
+            SecondsToEndTrip = 0; // Inicijalno, vožnja nije završena, pa je vreme do kraja 0
             IsFinished = false;
             IsRated = false;
         }

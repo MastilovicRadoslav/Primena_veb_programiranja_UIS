@@ -18,7 +18,7 @@ export default function Login() {
   const handleLoginClick = (e) => {
     e.preventDefault();
 
-    let hasError = false;
+    let hasError = false; //dok validacija ne prodje podaci se nece slati bekendu
 
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address.");
@@ -34,12 +34,12 @@ export default function Login() {
       setPasswordError('');
     }
 
-    if (!hasError) {
+    if (!hasError) { //validacija prosla
       LoginApiCall(email, password, loginApiEndpoint)
-        .then((responseOfLogin) => {
-          if ("Login successful" === responseOfLogin.message) {
-            localStorage.setItem('token', responseOfLogin.token);
-            navigate("/Dashboard", { state: { user: responseOfLogin.user } });
+        .then((responseOfLogin) => { 
+          if ("Login successful" === responseOfLogin.message) { //ako je prijava uspesna
+            localStorage.setItem('token', responseOfLogin.token); //cuvam token u localStorage koje je bekend poslao
+            navigate("/Dashboard", { state: { user: responseOfLogin.user } }); //u state cuvam koji se korisnik ulogovao da bih ga proslijedio stranicama
           } else {
             setEmailError("Invalid email or password, please try again.");
           }
@@ -82,7 +82,7 @@ export default function Login() {
           <h3 className='form-title'>LOGIN</h3>
           <form onSubmit={handleLoginClick} method='post'>
             <input className="input-field" type="text" placeholder="Email" value={email} onChange={handleEmailChange} />
-            {emailError && <span className="error-message">{emailError}</span>}
+            {emailError && <span className="error-message">{emailError}</span>} 
             <input className="input-field" type="password" placeholder="Password" value={password} onChange={handlePasswordChange} />
             {passwordError && <span className="error-message">{passwordError}</span>}
             <button className="login-button" type='submit'>Login</button>

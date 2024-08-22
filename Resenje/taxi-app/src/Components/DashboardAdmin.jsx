@@ -9,10 +9,10 @@ import { getUserInfo } from '../Services/ProfileServices.js';
 import VerifyDrivers from './VerifyDrivers.jsx';
 import RidesAdmin from './RidesAdmin.jsx';
 
-export default function DashboardAdmin(props) {
-    const user = props.user;
+export default function DashboardAdmin(props) {//user iz dashboard
+    const user = props.user; //preko Login pa Dashboard
     const apiEndpoint = process.env.REACT_APP_CHANGE_USER_FIELDS;
-    const userId = user.id;
+    const userId = user.id; //preko Login pa Dashboard
     const jwt = localStorage.getItem('token');
     const navigate = useNavigate();
 
@@ -35,8 +35,8 @@ export default function DashboardAdmin(props) {
     const [sumOfRatings, setSumOfRatings] = useState('');
     const [username, setUsername] = useState('');
 
-    const [view, setView] = useState('editProfile');
-    const [isEditing, setIsEditing] = useState(false);
+    const [view, setView] = useState('editProfile'); //koristi se za upravljanje koji deo dashboard-a je trenutno prikazan, inicijalno je editProfile, znaci renderuje se na odredjene strancie na osnovu view stanja
+    const [isEditing, setIsEditing] = useState(false); //da li se edituje profil?
 
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -45,14 +45,14 @@ export default function DashboardAdmin(props) {
 
     const [initialUser, setInitialUser] = useState({});
 
-    useEffect(() => {
+    useEffect(() => { //prvo sto se poziva na stranici jeste da se ucita korisnikove informacije i prikazu u sekciji prikaz profila
         const fetchUserInfo = async () => {
             try {
-                const userInfo = await getUserInfo(jwt, apiForCurrentUserInfo, userId);
-                const user = userInfo.user;
-                setUserInfo(user);
-                setInitialUser(user);
-
+                const userInfo = await getUserInfo(jwt, apiForCurrentUserInfo, userId); //preuzimam korisnicke podatke na osnovu JWT tokena i userId
+                const user = userInfo.user; //admin
+                setUserInfo(user); //ovde smestam
+                setInitialUser(user); //inicijalni
+                //prikaz informacija u formi za uredjivanje profila
                 setAddress(user.address);
                 setAverageRating(user.averageRating);
                 setBirthday(convertDateTimeToDateOnly(user.birthday));
@@ -74,11 +74,11 @@ export default function DashboardAdmin(props) {
         };
 
         fetchUserInfo();
-    }, [jwt, apiForCurrentUserInfo, userId]);
+    }, [jwt, apiForCurrentUserInfo, userId]); //kad se nesto promijeni automatski se opet ucita
 
-    const handleSaveClick = async () => {
-        const ChangedUser = await changeUserFields(apiEndpoint, firstName, lastName, birthday, address, email, password, selectedFile, username, jwt, newPassword, repeatNewPassword, oldPassword, userId);
-        setInitialUser(ChangedUser);
+    const handleSaveClick = async () => { //poziv API servisa za azuriranje korisnickih podataka
+        const ChangedUser = await changeUserFields(apiEndpoint, firstName, lastName, birthday, address, email, password, selectedFile, username, jwt, newPassword, repeatNewPassword, oldPassword, userId); //azuriranje korisnickih podataka na serveru
+        setInitialUser(ChangedUser); //novi podaci se vracaju u kompoennetu i koriste za azuriranje prikaza
         setUserInfo(ChangedUser);
         setAddress(ChangedUser.address);
         setAverageRating(ChangedUser.averageRating);
@@ -98,7 +98,7 @@ export default function DashboardAdmin(props) {
         setOldPassword('');
         setNewPassword('');
         setRepeatNewPassword('');
-        setIsEditing(false);
+        setIsEditing(false); //rezim uredjivanja se iskljucuje
     }
 
     const handleSignOut = () => {
@@ -106,18 +106,18 @@ export default function DashboardAdmin(props) {
         navigate('/');
     };
 
-    const handleShowDrivers = () => setView('drivers');
+    const handleShowDrivers = () => setView('drivers'); //prikazuje se lista vozaca
 
-    const handleShowDriversForVerification = () => setView('verify');
+    const handleShowDriversForVerification = () => setView('verify'); //prikazuje se verifikacija vozaca
 
-    const handleShowAllRides = () => setView('rides');
+    const handleShowAllRides = () => setView('rides'); //prikazuje se pregled voznji
 
-    const handleEditProfile = () => setView('editProfile');
+    const handleEditProfile = () => setView('editProfile'); //prikazuje se prikaz profila
 
-    const handleEditClick = () => setIsEditing(true);
+    const handleEditClick = () => setIsEditing(true); //aktivira rezim uredjivanja profila
 
-    const handleCancelClick = () => {
-        setIsEditing(false);
+    const handleCancelClick = () => { //ponistava promene i vraca prehodne inicjalne vrednosti
+        setIsEditing(false); //rezim uredjivanja nije ukljucen
         setAddress(initialUser.address);
         setAverageRating(initialUser.averageRating);
         setBirthday(convertDateTimeToDateOnly(initialUser.birthday));

@@ -1,4 +1,4 @@
-﻿using Common.DTOs;
+using Common.DTOs;
 using Common.Interfaces;
 using Common.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -11,25 +11,23 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
-
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]/[action]")]
     [ApiController]
+    [Route("api/[controller]/[action]")]
     public class UsersController : ControllerBase
     {
 
-        private IConfiguration _configuration;
-        private readonly IEmailService emailSender;
-
-        public UsersController(IConfiguration config, IEmailService emailSender)
+        private IConfiguration _config;
+        private readonly Common.Interfaces.IEmailService emailSender;
+        public UsersController(IConfiguration config, Common.Interfaces.IEmailService emailSender)
         {
-            _configuration = config;
+            _config = config;
             this.emailSender = emailSender;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register([FromForm] UserRegistrationModel userData)
+        public async Task<IActionResult> Register([FromForm] UserRegistrationModel userData) //FromForm
         {
             if (string.IsNullOrEmpty(userData.Email) || !CheckEmail(userData.Email)) return BadRequest("Invalid email format");
             if (string.IsNullOrEmpty(userData.Password)) return BadRequest("Password cannot be null or empty");
@@ -45,14 +43,14 @@ namespace WebApi.Controllers
 
                 UserModel userForRegister = new UserModel(userData);
 
-                var fabricClient = new FabricClient();
+                var fabricClient = new FabricClient(); //kreiranje FabricClient objekta zbog komunikacije sa ServiceFabric klasterom
                 bool result = false;
 
-                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
-                foreach (var partition in partitionList)
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService")); //vraca listu particija za odredjeni servis
+                foreach (var partition in partitionList) //iteriranje kroz particije
                 {
-                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
-                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey); //kreiranje kljuca koji se koristi za pristup specificnoj particiji unutar servisa
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey); //komuniakcija sa servisom i u servisu sa odredjenom particijomn na osnovu parittionKey
                     result = await proxy.addNewUser(userForRegister);
                 }
 
@@ -67,22 +65,21 @@ namespace WebApi.Controllers
             }
         }
 
-
         [HttpGet]
-        public async Task<List<UserDetailsDTO>> GetUsers()
+        public async Task<List<FullUserDTOs>> GetUsers() //dobavljanje svih korisnika
         {
 
             try
             {
                 var fabricClient = new FabricClient();
-                var result = new List<UserDetailsDTO>();
+                var result = new List<FullUserDTOs>();
 
                 var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
                 foreach (var partition in partitionList)
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
-                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var partitionResult = await proxy.listUsers();
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey); //kao da se koristi lokalno
+                    var partitionResult = await proxy.listUsers(); //preuzimanje korisnika
                     result.AddRange(partitionResult);
                 }
 
@@ -92,12 +89,12 @@ namespace WebApi.Controllers
             {
                 // Log the exception
                 Console.WriteLine($"An error occurred: {ex.Message}");
-                return new List<UserDetailsDTO>(); // Return an empty list or handle the error as needed
+                return new List<FullUserDTOs>(); // Return an empty list or handle the error as needed
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginUserDTO user)
+        public async Task<IActionResult> Login([FromBody] LoginUserDTOs user) //FromBody
         {
             if (string.IsNullOrEmpty(user.Email) || !CheckEmail(user.Email)) return BadRequest("Invalid email format");
             if (string.IsNullOrEmpty(user.Password)) return BadRequest("Password cannot be null or empty");
@@ -105,14 +102,14 @@ namespace WebApi.Controllers
             try
             {
                 var fabricClient = new FabricClient();
-                LogedUserDTO result = null; // Initialize result to null
+                LogedUserDTOs result = null; // Initialize result to null
 
                 var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
                 foreach (var partition in partitionList)
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
                     var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var partitionResult = await proxy.loginUser(user);
+                    var partitionResult = await proxy.loginUser(user); //ako se korisnik pronasao
 
                     if (partitionResult != null)
                     {
@@ -121,30 +118,30 @@ namespace WebApi.Controllers
                     }
                 }
 
-                if (result != null)
+                if (result != null) //korisnik sa odgovarajucim emailom i passwword je pronadjen
                 {
-                    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-                    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+                    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"])); //generisanje sigurnosnog kljuca iz tajnog niza koji sam definisao u konfiguraciji
+                    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256); //kredencijali za potpisivanje JWT tokena 
 
-                    List<Claim> claims = new List<Claim>();
-                    claims.Add(new Claim("MyCustomClaim", result.Roles.ToString()));
+                    List<Claim> claims = new List<Claim>(); //kreiranje liste zahteva
+                    claims.Add(new Claim("MyCustomClaim", result.Roles.ToString())); //dodajem korisnicku ulogu u listu zahteva
 
-                    var Sectoken = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-                        _configuration["Jwt:Issuer"],
+                    var Sectoken = new JwtSecurityToken(_config["Jwt:Issuer"], //kreira se sporedni JWT token sa postavljenim zahtevima
+                        _config["Jwt:Issuer"],
                         claims,
                         expires: DateTime.Now.AddMinutes(360),
                         signingCredentials: credentials);
 
-                    var token = new JwtSecurityTokenHandler().WriteToken(Sectoken);
+                    var token = new JwtSecurityTokenHandler().WriteToken(Sectoken); //generisanje JWT tokena u string formatu
 
                     var response = new
                     {
-                        token = token,
-                        user = result,
-                        message = "Login successful"
+                        token = token, //generisani token
+                        user = result, //pronadjeni korisnik
+                        message = "Login successful" //poruka o uspesnoj prijavi
                     };
 
-                    return Ok(response);
+                    return Ok(response); //ako se nasao korisnik vraca se response sa ovim iznad informacijama
                 }
                 else
                 {
@@ -157,28 +154,22 @@ namespace WebApi.Controllers
             }
         }
 
-        private bool CheckEmail(string email)
-        {
-            const string pattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
-            return Regex.IsMatch(email, pattern);
-        }
-
         [Authorize(Policy = "Admin")]
         [HttpGet]
-        public async Task<IActionResult> GetAllDrivers()
+        public async Task<IActionResult> GetAllDrivers() //funkcija za preuizmanje svih vozaca koji postoje, dostupno admin-ima
         {
             try
             {
 
                 var fabricClient = new FabricClient();
-                List<DriverDetailsDTO> result = null;
+                List<DriverDetailsDTOs> result = null;
 
                 var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
                 foreach (var partition in partitionList)
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
-                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var parititonResult = await proxy.listDrivers();
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey); //kao da je lokalno
+                    var parititonResult = await proxy.listDrivers(); //lista svih vozaca
                     if (parititonResult != null)
                     {
                         result = parititonResult;
@@ -190,9 +181,9 @@ namespace WebApi.Controllers
                 if (result != null)
                 {
 
-                    var response = new
+                    var response = new //kreiranje odgovora
                     {
-                        drivers = result,
+                        drivers = result, //obavezni vozaci
                         message = "Succesfuly get list of drivers"
                     };
                     return Ok(response);
@@ -209,22 +200,23 @@ namespace WebApi.Controllers
             }
         }
 
+
         [Authorize(Policy = "Admin")]
         [HttpPut]
-        public async Task<IActionResult> ChangeDriverStatus([FromBody] DriverStatusUpdateDTO driver)
+        public async Task<IActionResult> ChangeDriverStatus([FromBody] DriverStatusUpdateDTOs driver)
         {
             try
             {
 
                 var fabricClient = new FabricClient();
-                bool result = false;
+                bool result = false; //da li se uspesno promenilo
 
-                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
-                foreach (var partition in partitionList)
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService")); //isto
+                foreach (var partition in partitionList) //sve isto 
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
                     var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    bool parititonResult = await proxy.changeDriverStatus(driver.Id, driver.Status);
+                    bool parititonResult = await proxy.changeDriverStatus(driver.Id, driver.Status); //azuiranje statusa vozaca
                     result = parititonResult;
                 }
 
@@ -239,23 +231,24 @@ namespace WebApi.Controllers
             }
         }
 
-        [AllowAnonymous]
+
+        [AllowAnonymous] //metoda moze biti pozvana i bez autentifikacije
         [HttpPut]
-        public async Task<IActionResult> ChangeUserFields([FromForm] UserUpdateModel user)
+        public async Task<IActionResult> ChangeUserFields([FromForm] UserUpdateModel user) //FromForm radi fajlova slike npr
         {
             UserUpdateNetworkModel userForUpdate = new UserUpdateNetworkModel(user);
 
             try
             {
-                var fabricClient = new FabricClient();
-                UserDetailsDTO result = null;
+                var fabricClient = new FabricClient(); //standardno
+                FullUserDTOs result = null;
 
-                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
-                foreach (var partition in partitionList)
+                var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService")); //lista particija
+                foreach (var partition in partitionList) //kroz svaku
                 {
-                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
-                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var proxyResult = await proxy.changeUserFields(userForUpdate);
+                    var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey); //specificna particija u servisu
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey); //komuniakcija sa servisom i u servisu sa odredjenom particijomn na osnovu parittionKey
+                    var proxyResult = await proxy.changeUserFields(userForUpdate); //poziva se metoda za azuriranje korisnika
                     if (proxyResult != null)
                     {
                         result = proxyResult;
@@ -263,12 +256,12 @@ namespace WebApi.Controllers
                     }
                 }
 
-                if (result != null)
+                if (result != null) //ako je korisnik uspesno azuriran
                 {
-                    var response = new
+                    var response = new //kreiranje odogovora
                     {
-                        changedUser = result,
-                        message = "Succesfuly changed user fields!"
+                        changedUser = result, //salje se taj kroisnik azuriran
+                        message = "Succesfuly changed user fields!" // i poruka
                     };
                     return Ok(response);
                 }
@@ -281,21 +274,22 @@ namespace WebApi.Controllers
             }
         }
 
-        [AllowAnonymous]
+
+        [AllowAnonymous] //svkai moze
         [HttpGet]
-        public async Task<IActionResult> GetUserInfo([FromQuery] Guid id)
+        public async Task<IActionResult> GetUserInfo([FromQuery] Guid id) //dobavljanje informacija o korisniku na osnovu poslatog id, kroz url je na frontedu na api dodat Id, npr. id = ... ---> FromQuery
         {
             try
-            {
+            {   //sve isto
                 var fabricClient = new FabricClient();
-                UserDetailsDTO result = null;
+                FullUserDTOs result = null;
 
                 var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
                 foreach (var partition in partitionList)
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
                     var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var partitionResult = await proxy.GetUserInfo(id);
+                    var partitionResult = await proxy.GetUserInfo(id); //dobavi infomracije za taj Id
                     if (partitionResult != null)
                     {
                         result = partitionResult;
@@ -303,9 +297,9 @@ namespace WebApi.Controllers
                     }
                 }
 
-                if (result != null)
+                if (result != null) //ako je uspesno nadjen
                 {
-                    var response = new
+                    var response = new //spakuj poruku
                     {
                         user = result,
                         message = "Successfully retrieved user info"
@@ -323,10 +317,18 @@ namespace WebApi.Controllers
             }
         }
 
+        private bool CheckEmail(string email) //vaidacija email-a
+        {
+            const string pattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
+            return Regex.IsMatch(email, pattern);
+        }
+
+        //OVDJE
+
         [Authorize(Policy = "Admin")]
         [HttpPut]
-        public async Task<IActionResult> VerifyDriver([FromBody] DriverVerificationRequestDTO driver)
-        {
+        public async Task<IActionResult> VerifyDriver([FromBody] DriverVerificationRequestDTOs driver) //verifikovanje vozaca, SLANJE EMAIL-A
+        {   //sve isto
             try
             {
                 var fabricClient = new FabricClient();
@@ -337,7 +339,7 @@ namespace WebApi.Controllers
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
                     var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var partitionResult = await proxy.VerifyDriver(driver.Id, driver.Email, driver.Action);
+                    var partitionResult = await proxy.VerifyDriver(driver.Id, driver.Email, driver.Action); //verifikacija vozaca
                     if (partitionResult != null)
                     {
                         result = partitionResult;
@@ -345,14 +347,15 @@ namespace WebApi.Controllers
                     }
                 }
 
-                if (result)
+                if (result) //ako je uspesno verifikovan
                 {
-                    var response = new
+                    var response = new //kreiram poruku
                     {
-                        Verified = result,
-                        message = $"Driver with id:{driver.Id} is now changed status of verification to:{driver.Action}"
+                        Verified = result, //vracam tog verifikovanog vozaca
+                        message = $"Driver with id:{driver.Id} is now changed status of verification to:{driver.Action}" //i poruku
                     };
-                    if (driver.Action == "Prihvacen") await this.emailSender.SendEmailAsync(driver.Email, "Verifikacija vozača", "Uspešna verifikacija, možete nastaviti sa korišćenjem aplikacije.");
+                    //ako je vozac "Prihvacen" to jeste verifikovan saljem email tom korisniku da je uspesno verifikovan
+                    if (driver.Action == "Prihvacen") await this.emailSender.SendEmailAsync(driver.Email, "Account verification", "Successfuly verified on taxi app now you can drive!");
 
                     return Ok(response);
                 }
@@ -368,22 +371,25 @@ namespace WebApi.Controllers
             }
         }
 
-        [Authorize(Policy = "Admin")]
+
+        //OVDJE
+
+        [Authorize(Policy = "Admin")] //samo adminima
         [HttpGet]
-        public async Task<IActionResult> GetDriversForVerification()
+        public async Task<IActionResult> GetDriversForVerification() //preuzimanje liste vozaca koji nisu verifikovani
         {
             try
             {
-
+                //povezivanje isto
                 var fabricClient = new FabricClient();
-                List<DriverDetailsDTO> result = null;
+                List<DriverDetailsDTOs> result = null;
 
                 var partitionList = await fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/TaxiApp/UsersService"));
                 foreach (var partition in partitionList)
                 {
                     var partitionKey = new ServicePartitionKey(((Int64RangePartitionInformation)partition.PartitionInformation).LowKey);
-                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey);
-                    var parititonResult = await proxy.GetNotVerifiedDrivers();
+                    var proxy = ServiceProxy.Create<IUserService>(new Uri("fabric:/TaxiApp/UsersService"), partitionKey); //komunikacija sa zelejnom instancom i odredjenom particijom unutar nje
+                    var parititonResult = await proxy.GetNotVerifiedDrivers(); //funkcija za dobavljanje
                     if (parititonResult != null)
                     {
                         result = parititonResult;
@@ -395,16 +401,16 @@ namespace WebApi.Controllers
                 if (result != null)
                 {
 
-                    var response = new
+                    var response = new //kreiram poruku za vracanje na front
                     {
-                        drivers = result,
-                        message = "Succesfuly get list of drivers"
+                        drivers = result, //sve vozace
+                        message = "Succesfuly get list of drivers" //poruka
                     };
                     return Ok(response);
                 }
                 else
                 {
-                    return BadRequest("Incorrect email or password");
+                    return BadRequest("Incorrect email or password"); //400
                 }
 
             }

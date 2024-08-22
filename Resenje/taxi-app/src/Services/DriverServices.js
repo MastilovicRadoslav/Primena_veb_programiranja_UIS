@@ -1,30 +1,30 @@
 import axios from "axios";
 import qs from 'qs';
-
-export  async function getAllAvailableRides(jwt, apiEndpoint) {
+//GetAllUncompletedRides
+export  async function getAllAvailableRides(jwt, apiEndpoint) { //dobavlja sve dostupne voznje koje vozac moze da prihvati
     try {
         const config = {
             headers: {
-                Authorization: `Bearer ${jwt}`,
-                'Content-Type': 'application/json'
+                Authorization: `Bearer ${jwt}`, //JWS token standardno u zaglavlju
+                'Content-Type': 'application/json' //samo za POST i PUT zahteve
             }
         };
         const url = `${apiEndpoint}`;
-        const response = await axios.get(url, config);
-        return response.data;
+        const response = await axios.get(url, config);//GET zahtev za dobijanje voznji
+        return response.data; //odgovor
     } catch (error) {
         console.error('Error fetching data (async/await):', error.message);
         throw error;
     }
 }
 
-
-export  async function AcceptDrive(apiEndpoint, driverId,idRide,jwt) {
+//AcceptNewRide
+export  async function AcceptDrive(apiEndpoint, driverId,idRide,jwt) { //omogucava vozacu da prihvati voznju iz liste ponudjenih voznji
     try {
         
         const response = await axios.put(apiEndpoint, {
-            DriverId :driverId,
-            RideId :idRide
+            DriverId :driverId, //Id vozaca koji prihvata voznju
+            RideId :idRide ////Id voznje koja se prihvata
         }, {
             headers: {
                 Authorization: `Bearer ${jwt}`
@@ -37,8 +37,8 @@ export  async function AcceptDrive(apiEndpoint, driverId,idRide,jwt) {
         return error;
     }
 }
-
-export async function getCurrentRide(jwt, apiEndpoint,userId) {
+//GetCurrentTripDriver
+export async function getCurrentRide(jwt, apiEndpoint,userId) { //dobavljanje trenutne voznje ako postoji zajednicko za vozaca i korisnika voznje
     try {
         const config = {
             headers: {
@@ -57,7 +57,7 @@ export async function getCurrentRide(jwt, apiEndpoint,userId) {
     }
 }
 
-export async function getMyRidesDriver(jwt, apiEndpoint,userId) {
+export async function getMyRidesDriver(jwt, apiEndpoint,userId) { //Dobavljanje svih voznji za vozaca
     try {
         const config = {
             headers: {

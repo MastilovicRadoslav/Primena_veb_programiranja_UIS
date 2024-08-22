@@ -9,23 +9,34 @@ namespace Common.Interfaces
     public interface IUserService : IService
     {
         [OperationContract]
-        Task<bool> addNewUser(UserModel user);
+        Task<bool> addNewUser(UserModel user); //za Register
+
         [OperationContract]
-        Task<List<UserDetailsDTO>> listUsers();
+        Task<LogedUserDTOs> loginUser(LoginUserDTOs loginUserDTO); //za Login
+
         [OperationContract]
-        Task<LogedUserDTO> loginUser(LoginUserDTO loginUserDTO);
+        Task<List<FullUserDTOs>> listUsers(); //za GetUsers
+
         [OperationContract]
-        Task<List<DriverDetailsDTO>> listDrivers();
+        Task<List<DriverDetailsDTOs>> listDrivers(); //Za GetAllDrivers
+
         [OperationContract]
-        Task<bool> changeDriverStatus(Guid id, bool status);
+        Task<bool> changeDriverStatus(Guid id, bool status); //Za ChangeDriverStatus
+
         [OperationContract]
-        Task<UserDetailsDTO> changeUserFields(UserUpdateNetworkModel user);
+        Task<FullUserDTOs> changeUserFields(UserUpdateNetworkModel user); //Za ChangeUserFields
+
         [OperationContract]
-        Task<UserDetailsDTO> GetUserInfo(Guid id);
+        Task<FullUserDTOs> GetUserInfo(Guid id); //Za GetUserInfo
+
         [OperationContract]
-        Task<bool> VerifyDriver(Guid id, string email, string action);
+        Task<bool> VerifyDriver(Guid id, string email, string action); //verifikovanje vozaca
+
         [OperationContract]
-        Task<List<DriverDetailsDTO>> GetNotVerifiedDrivers();
+        Task<List<DriverDetailsDTOs>> GetNotVerifiedDrivers(); //Dobavljanje neverifikovanih vozaca
+
+
+
 
     }
 }

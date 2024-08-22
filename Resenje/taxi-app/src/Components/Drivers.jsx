@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import '../Styles/DriversViewPage.css'; // Import your CSS file for styling
-import { ChangeDriverStatus, GetAllDrivers } from '../Services/AdminServices.js';
+import { ChangeDriverStatus, GetAllDrivers } from '../Services/AdminServices.js'; //bekend
 
 export default function DriversView() {
-    const [drivers, setDrivers] = useState([]);
-    const token = localStorage.getItem('token');
-    const apiEndpoint = process.env.REACT_APP_CHANGE_DRIVER_STATUS;
-    const getAllDriversEndpoint = process.env.REACT_APP_GET_ALL_DRIVERS;
+    const [drivers, setDrivers] = useState([]); //niz sa podacima o vozacima, preuzet cu podatke sa servera
+    const token = localStorage.getItem('token'); //token koji sam sacuvao u localStorage
+    const apiEndpoint = process.env.REACT_APP_CHANGE_DRIVER_STATUS; //za promjenu statusa vozaca 
+    const getAllDriversEndpoint = process.env.REACT_APP_GET_ALL_DRIVERS; //preuzimanje svih vozaca
 
-    // Function to fetch all drivers
+    // Funkcija za preuzimanje vozaca
     const fetchDrivers = async () => {
         try {
-            const data = await GetAllDrivers(getAllDriversEndpoint, token);
+            const data = await GetAllDrivers(getAllDriversEndpoint, token); //preuizmnaje svih podataka o vozacima
             console.log("Drivers:",data);
-            setDrivers(data.drivers);
+            setDrivers(data.drivers); //popunimo niz
         } catch (error) {
             console.error('Error fetching drivers:', error);
         }
     };
 
-    useEffect(() => {
+    useEffect(() => { //cim se komponenta renderuje pokrece se funkcija za preuzimanje vozaca
         fetchDrivers();
     }, []);
 
     const handleChangeStatus = async (id, isBlocked) => {
         try {
-            await ChangeDriverStatus(apiEndpoint, id, !isBlocked, token); // Toggle the isBlocked value
-            await fetchDrivers(); // Refresh the list of drivers
+            await ChangeDriverStatus(apiEndpoint, id, !isBlocked, token); // funkcija koja menja status vozača
+            await fetchDrivers(); // Kad se promeni status ponovo se preuzima lista vozaca 
         } catch (error) {
             console.error('Error changing driver status:', error);
         }
